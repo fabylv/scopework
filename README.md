@@ -18,7 +18,7 @@ ScopeWork lets you walk a property, snap photos, and get an AI-generated repair 
 ## Tech Stack
 
 - **Framework:** Next.js 15 (App Router)
-- **Language:** TypeScript
+- **Language:** JavaScript
 - **Styling:** Tailwind CSS
 - **AI Vision:** OpenAI GPT-4o Vision (photo analysis + repair detection)
 - **Pricing:** Home Depot API
@@ -43,7 +43,7 @@ src/
 │   ├── ai/             # AI vision integration
 │   ├── homedepot/      # Home Depot API
 │   └── db/             # Database helpers
-└── types/              # Shared TypeScript types
+└── types/              # Shared type definitions (JSDoc)
 ```
 
 ## Getting Started
