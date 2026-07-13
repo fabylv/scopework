@@ -23,7 +23,7 @@ export default function AccountPage() {
 
   return (
     <AppShell>
-      <div className="px-6 py-8 max-w-xl">
+      <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-xl">
         <h1 className="text-2xl font-bold text-[#171C24] mb-1">Account</h1>
         <p className="text-sm text-[#6E737B] mb-6">Your profile and settings.</p>
 

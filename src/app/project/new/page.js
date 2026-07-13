@@ -36,7 +36,7 @@ export default function NewProjectPage() {
 
   return (
     <AppShell>
-      <div className="px-6 py-8 max-w-xl">
+      <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-xl">
         {/* Back */}
         <Link
           href="/"

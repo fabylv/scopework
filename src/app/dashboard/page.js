@@ -118,7 +118,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="px-6 py-8 max-w-6xl">
+      <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-6xl">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>

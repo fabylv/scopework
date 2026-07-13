@@ -92,7 +92,7 @@ function RepairRow({ repair }) {
         {repair.severity.charAt(0).toUpperCase() + repair.severity.slice(1)}
       </span>
       {/* Cost */}
-      <div className="text-right shrink-0 ml-1">
+      <div className="hidden sm:block text-right shrink-0 ml-1">
         <p className="text-sm font-bold text-[#171C24]">{low} – {high}</p>
         <p className="text-[10px] text-[#9AA0A8] font-semibold uppercase tracking-wide mt-0.5">Estimate</p>
       </div>
@@ -176,7 +176,7 @@ export default function ProjectPage() {
 
   return (
     <AppShell>
-      <div className="px-6 py-8 max-w-3xl">
+      <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-3xl pb-20 md:pb-28">
         {/* Back */}
         <Link
           href="/dashboard"
@@ -204,28 +204,28 @@ export default function ProjectPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-[#2A323C]">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6 pt-5 border-t border-[#2A323C]">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Issues Found</p>
-              <p className="text-3xl font-black text-white mt-1">{repairs.length}</p>
+              <p className="text-2xl sm:text-3xl font-black text-white mt-1">{repairs.length}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Photos Analyzed</p>
-              <p className="text-3xl font-black text-white mt-1">{project?.photos?.length || 0}</p>
+              <p className="text-2xl sm:text-3xl font-black text-white mt-1">{project?.photos?.length || 0}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Total Estimate</p>
               {hasEstimate ? (
-                <p className="text-xl font-black text-white mt-1 leading-tight">${low.toLocaleString()} – ${high.toLocaleString()}</p>
+                <p className="text-base sm:text-xl font-black text-white mt-1 leading-tight">${low.toLocaleString()} – ${high.toLocaleString()}</p>
               ) : (
-                <p className="text-3xl font-black text-[#3A4250] mt-1">—</p>
+                <p className="text-base sm:text-xl font-black text-[#3A4250] mt-1">—</p>
               )}
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-[#2A323C]">
-            <div className="flex gap-2 flex-1">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start gap-2 mt-5 pt-4 border-t border-[#2A323C]">
+            <div className="flex gap-2 flex-1 min-w-0">
               <button className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export PDF
@@ -240,7 +240,7 @@ export default function ProjectPage() {
                 </Link>
               )}
             </div>
-            <div className="flex rounded-lg overflow-hidden border border-[#2A323C]">
+            <div className="shrink-0 flex rounded-lg overflow-hidden border border-[#2A323C]">
               <button className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-[#FFA12B] text-[#171C24]">
                 🏠 Home Depot Pricing
               </button>

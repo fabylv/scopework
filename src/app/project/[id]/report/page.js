@@ -76,7 +76,7 @@ function RepairRow({ repair }) {
       <span className={`text-xs font-bold px-2 py-0.5 rounded-full capitalize ${SEVERITY_BADGE[repair.severity]}`}>
         {repair.severity}
       </span>
-      <div className="text-right shrink-0">
+      <div className="hidden sm:block text-right shrink-0">
         <p className="text-sm font-bold text-[#171C24]">${low.toLocaleString()} – ${high.toLocaleString()}</p>
         <p className="text-[10px] text-[#9AA0A8] font-semibold uppercase tracking-wide mt-0.5">Estimate</p>
       </div>
@@ -106,7 +106,7 @@ export default function ReportPage() {
   if (!project) {
     return (
       <AppShell>
-        <div className="px-6 py-8 flex items-center justify-center min-h-[60vh]">
+        <div className="px-4 sm:px-6 py-5 sm:py-8 flex items-center justify-center min-h-[60vh]">
           <p className="text-[#6E737B]">{projectId ? 'Loading report...' : 'Report not found'}</p>
         </div>
       </AppShell>
@@ -124,7 +124,7 @@ export default function ReportPage() {
 
   return (
     <AppShell>
-      <div className="px-6 py-8 max-w-3xl">
+      <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-3xl">
         {/* Back */}
         <Link
           href={`/project/${projectId}`}
@@ -144,18 +144,18 @@ export default function ReportPage() {
           <h1 className="text-2xl font-bold text-white">{project.address}</h1>
           <p className="text-sm text-[#5A6270] mt-1">{formatDate(project.createdAt)}</p>
 
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-[#2A323C]">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6 pt-5 border-t border-[#2A323C]">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Issues Found</p>
-              <p className="text-3xl font-black text-white mt-1">{repairs.length}</p>
+              <p className="text-2xl sm:text-3xl font-black text-white mt-1">{repairs.length}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Photos Analyzed</p>
-              <p className="text-3xl font-black text-white mt-1">{project.photos?.length || 0}</p>
+              <p className="text-2xl sm:text-3xl font-black text-white mt-1">{project.photos?.length || 0}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Total Estimate</p>
-              <p className="text-xl font-black text-white mt-1 leading-tight">
+              <p className="text-base sm:text-xl font-black text-white mt-1 leading-tight">
                 ${totalLow.toLocaleString()} – ${totalHigh.toLocaleString()}
               </p>
             </div>
@@ -225,7 +225,7 @@ export default function ReportPage() {
         )}
 
         {/* Bottom nav */}
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Link
             href={`/project/${projectId}`}
             className="flex-1 text-center rounded-lg border border-[#E1E2E4] bg-white py-2.5 text-sm font-semibold text-[#4A5260] hover:bg-[#FAF9F6] transition-colors"

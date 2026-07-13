@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 export default function ContractorsPage() {
   return (
     <AppShell>
-      <div className="px-6 py-8 max-w-3xl">
+      <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-3xl">
         <h1 className="text-2xl font-bold text-[#171C24] mb-1">Contractors</h1>
         <p className="text-sm text-[#6E737B] mb-8">Manage your contractor profiles and labor rates.</p>
 

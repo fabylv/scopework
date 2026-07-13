@@ -80,7 +80,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-5 pt-16 pb-20 grid lg:grid-cols-2 gap-12 items-center">
+      <section className="max-w-6xl mx-auto px-5 pt-10 sm:pt-16 pb-14 sm:pb-20 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* Left */}
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-[#FFF3DE] border border-[#FFA12B]/20 px-3 py-1.5 mb-6">
@@ -96,21 +96,21 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-lg text-[#6E737B] leading-relaxed mb-8 max-w-md">
+          <p className="text-base sm:text-lg text-[#6E737B] leading-relaxed mb-8 max-w-md">
             Walk a property, snap photos, and let AI identify every repair — grouped by trade with cost estimates. No clipboard. No guesswork.
           </p>
 
-          <div className="flex flex-wrap gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#FFA12B] px-6 py-3.5 text-base font-bold text-[#171C24] hover:bg-[#F28E1C] transition-colors"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#FFA12B] px-6 py-3.5 text-base font-bold text-[#171C24] hover:bg-[#F28E1C] transition-colors"
               style={{ boxShadow: '0 8px 24px rgba(255,161,43,0.3)' }}
             >
               Start for free →
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-xl border border-[#E1E2E4] bg-white px-6 py-3.5 text-base font-semibold text-[#4A5260] hover:bg-[#F5F4F1] transition-colors"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#E1E2E4] bg-white px-6 py-3.5 text-base font-semibold text-[#4A5260] hover:bg-[#F5F4F1] transition-colors"
             >
               Sign in
             </Link>
@@ -120,7 +120,7 @@ export default function LandingPage() {
         </div>
 
         {/* Right — App mockup */}
-        <div className="bg-white rounded-2xl border border-[#E1E2E4] p-5" style={{ boxShadow: '0 18px 48px rgba(15,23,42,0.12)' }}>
+        <div className="hidden lg:block bg-white rounded-2xl border border-[#E1E2E4] p-5" style={{ boxShadow: '0 18px 48px rgba(15,23,42,0.12)' }}>
           {/* Mock header */}
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -168,7 +168,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-5">
           <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0A8] text-center mb-2">How it works</p>
           <h2 className="text-2xl font-black text-[#171C24] text-center mb-10">Three steps to a full scope of work</h2>
-          <div className="grid sm:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
             <Step number="1" icon="📷" title="Snap photos"
               desc="Walk the property and capture repairs room by room — on your phone, in real time." />
             <Step number="2" icon="🤖" title="AI analyzes"
@@ -197,9 +197,9 @@ export default function LandingPage() {
 
       {/* CTA banner */}
       <section className="max-w-6xl mx-auto px-5 pb-16">
-        <div className="bg-[#151C24] rounded-2xl px-8 py-12 text-center" style={{ boxShadow: '0 8px 32px rgba(15,23,42,0.15)' }}>
+        <div className="bg-[#151C24] rounded-2xl px-6 sm:px-8 py-10 sm:py-12 text-center" style={{ boxShadow: '0 8px 32px rgba(15,23,42,0.15)' }}>
           <p className="text-xs font-bold uppercase tracking-widest text-[#FFA12B] mb-3">Get started today</p>
-          <h2 className="text-3xl font-black text-white mb-3">Ready to scope your first property?</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-white mb-3">Ready to scope your first property?</h2>
           <p className="text-[#6A7280] mb-8 max-w-md mx-auto">
             Join investors and contractors who use ScopeWork to stop guessing and start knowing.
           </p>
