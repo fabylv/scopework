@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 const NAV = [
   { href: '/', label: 'Dashboard', icon: (
@@ -17,6 +19,24 @@ const NAV = [
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  }
 
   return (
     <div className="flex min-h-screen bg-[#FAF9F6]">
@@ -66,9 +86,17 @@ export default function AppShell({ children }) {
           })}
         </nav>
 
-        {/* Sign out */}
+        {/* User + sign out */}
         <div className="px-3 pb-5 pt-3 border-t border-[#222B36]">
-          <button className="flex items-center gap-2 text-xs text-[#5A6270] hover:text-[#8A909A] px-3 py-2 transition-colors">
+          {user && (
+            <p className="text-[11px] text-[#5A6270] px-3 pb-2 truncate">
+              {user.user_metadata?.full_name || user.email}
+            </p>
+          )}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-xs text-[#5A6270] hover:text-[#8A909A] px-3 py-2 transition-colors w-full"
+          >
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Sign out
           </button>
