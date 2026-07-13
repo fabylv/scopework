@@ -44,7 +44,7 @@ export default function AppShell({ children }) {
       <aside className="hidden md:flex flex-col w-[200px] shrink-0 bg-[#151C24] min-h-screen sticky top-0 h-screen">
         {/* Logo */}
         <div className="px-5 pt-6 pb-5">
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#FFA12B] flex items-center justify-center shrink-0">
               <span className="text-sm">🏗️</span>
             </div>
@@ -52,7 +52,7 @@ export default function AppShell({ children }) {
               <p className="text-white font-bold text-sm leading-none">ScopeWork</p>
               <p className="text-[#5A6270] text-[10px] font-bold uppercase tracking-widest mt-0.5">Estimator</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* New Project */}
@@ -105,10 +105,10 @@ export default function AppShell({ children }) {
 
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-30 bg-[#151C24] px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-[#FFA12B] flex items-center justify-center text-xs">🏗️</div>
           <p className="text-white font-bold text-sm">ScopeWork</p>
-        </div>
+        </Link>
         <Link
           href="/project/new"
           className="rounded-lg bg-[#FFA12B] px-3 py-1.5 text-xs font-bold text-[#171C24]"
