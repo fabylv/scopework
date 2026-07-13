@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { addPhotoError, addPhotoResult, getProject } from '@/lib/projects';
 
@@ -73,21 +73,21 @@ export default function ProjectPage() {
   const [analysisError, setAnalysisError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const project = useSyncExternalStore(
-    (cb) => {
-      if (typeof window === 'undefined') return () => {};
-      window.addEventListener('storage', cb);
-      window.addEventListener('focus', cb);
-      window.addEventListener('scopework-projects-changed', cb);
-      return () => {
-        window.removeEventListener('storage', cb);
-        window.removeEventListener('focus', cb);
-        window.removeEventListener('scopework-projects-changed', cb);
-      };
-    },
-    () => (projectId ? getProject(projectId) : null),
-    () => null
-  );
+  const [project, setProject] = useState(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    function refresh() { setProject(getProject(projectId)); }
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('scopework-projects-changed', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('scopework-projects-changed', refresh);
+    };
+  }, [projectId]);
 
   const repairs = Array.isArray(project?.repairs) ? project.repairs : [];
   const counts = getSeverityCounts(repairs);

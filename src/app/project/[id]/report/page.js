@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSyncExternalStore } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getProject } from '@/lib/projects';
 
@@ -67,21 +67,21 @@ export default function ReportPage() {
   const params = useParams();
   const projectId = params?.id;
 
-  const project = useSyncExternalStore(
-    (cb) => {
-      if (typeof window === 'undefined') return () => {};
-      window.addEventListener('storage', cb);
-      window.addEventListener('focus', cb);
-      window.addEventListener('scopework-projects-changed', cb);
-      return () => {
-        window.removeEventListener('storage', cb);
-        window.removeEventListener('focus', cb);
-        window.removeEventListener('scopework-projects-changed', cb);
-      };
-    },
-    () => (projectId ? getProject(projectId) : null),
-    () => null
-  );
+  const [project, setProject] = useState(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    function refresh() { setProject(getProject(projectId)); }
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('scopework-projects-changed', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('scopework-projects-changed', refresh);
+    };
+  }, [projectId]);
 
   const repairs = Array.isArray(project?.repairs) ? project.repairs : [];
   const counts = getSeverityCounts(repairs);

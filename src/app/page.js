@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSyncExternalStore } from 'react';
+import { useState, useEffect } from 'react';
 import { getProjects } from '@/lib/projects';
 
 const SEVERITY_ORDER = ['major', 'moderate', 'minor'];
@@ -92,21 +92,20 @@ function ProjectCard({ project }) {
 }
 
 export default function DashboardPage() {
-  const projects = useSyncExternalStore(
-    (cb) => {
-      if (typeof window === 'undefined') return () => {};
-      window.addEventListener('storage', cb);
-      window.addEventListener('focus', cb);
-      window.addEventListener('scopework-projects-changed', cb);
-      return () => {
-        window.removeEventListener('storage', cb);
-        window.removeEventListener('focus', cb);
-        window.removeEventListener('scopework-projects-changed', cb);
-      };
-    },
-    getProjects,
-    () => []
-  );
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    function refresh() { setProjects(getProjects()); }
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('scopework-projects-changed', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('scopework-projects-changed', refresh);
+    };
+  }, []);
 
   const hasProjects = projects.length > 0;
 
