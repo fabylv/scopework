@@ -19,10 +19,13 @@ export default function LoginPage() {
     setError('');
 
     const supabase = createClient();
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
 
     if (err) {
       setError(err.message);
+      setLoading(false);
+    } else if (!data.session) {
+      setError('Please confirm your email address first — check your inbox for a confirmation link from Supabase.');
       setLoading(false);
     } else {
       router.push('/dashboard');
