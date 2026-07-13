@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { REPAIR_ANALYSIS_PROMPT } from '../prompts.js';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 /**
  * Analyze a property photo using Claude (claude-sonnet-4-5).
  * @param {string} base64Image - Base64-encoded image (no data URI prefix)
@@ -10,6 +8,8 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
  * @returns {Promise<Object>} Structured repair analysis
  */
 export async function analyzeWithAnthropic(base64Image, mimeType = 'image/jpeg') {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not set in .env.local');
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await client.messages.create({
     model: 'claude-sonnet-4-5',
     max_tokens: 1500,

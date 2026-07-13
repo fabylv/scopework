@@ -1,8 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { REPAIR_ANALYSIS_PROMPT } from '../prompts.js';
 
-const client = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-
 /**
  * Analyze a property photo using Gemini 2.5 Pro.
  * @param {string} base64Image - Base64-encoded image (no data URI prefix)
@@ -10,6 +8,8 @@ const client = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
  * @returns {Promise<Object>} Structured repair analysis
  */
 export async function analyzeWithGoogle(base64Image, mimeType = 'image/jpeg') {
+  if (!process.env.GOOGLE_AI_API_KEY) throw new Error('GOOGLE_AI_API_KEY is not set in .env.local');
+  const client = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
   const model = client.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
   const result = await model.generateContent([
