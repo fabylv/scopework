@@ -233,7 +233,7 @@ export default function ReportPage() {
             ← Back to Inspection
           </Link>
           <Link
-            href="/"
+            href="/dashboard"
             className="flex-1 text-center rounded-lg border border-[#E1E2E4] bg-white py-2.5 text-sm font-semibold text-[#4A5260] hover:bg-[#FAF9F6] transition-colors"
           >
             All Projects

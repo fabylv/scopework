@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
+const PUBLIC_ROUTES = ['/', '/login', '/register'];
+
 export async function middleware(request) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -9,13 +11,9 @@ export async function middleware(request) {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
+        getAll() { return request.cookies.getAll(); },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -25,24 +23,23 @@ export async function middleware(request) {
     }
   );
 
-  // Refresh session
   const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register');
-  const isPublicRoute = isAuthRoute || pathname.startsWith('/api') || pathname.startsWith('/_next');
+  const isPublic = PUBLIC_ROUTES.includes(pathname) || pathname.startsWith('/api') || pathname.startsWith('/_next');
+  const isAuthRoute = pathname === '/login' || pathname === '/register';
 
-  // Redirect unauthenticated users to login
-  if (!user && !isPublicRoute) {
+  // Redirect unauthenticated users to login (except public routes)
+  if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages → dashboard
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 

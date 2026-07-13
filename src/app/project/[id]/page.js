@@ -179,7 +179,7 @@ export default function ProjectPage() {
       <div className="px-6 py-8 max-w-3xl">
         {/* Back */}
         <Link
-          href="/"
+          href="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm text-[#6E737B] hover:text-[#171C24] mb-6 transition-colors"
         >
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
