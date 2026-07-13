@@ -39,6 +39,22 @@ function projectGradient(id = '') {
   return GRADIENTS[n];
 }
 
+const SAMPLE_PHOTOS = [
+  'https://images.unsplash.com/photo-1564013799919-ab3d54bcd0f8?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=600&h=400&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format',
+];
+
+function samplePhoto(id = '') {
+  const n = id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % SAMPLE_PHOTOS.length;
+  return SAMPLE_PHOTOS[n];
+}
+
 function ProjectCard({ project }) {
   const range = estimateRange(project.repairs);
   const totalPhotos = project.photos?.length || 0;
@@ -51,14 +67,12 @@ function ProjectCard({ project }) {
       style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.06)' }}
     >
       {/* Photo / placeholder */}
-      <div className={`relative w-full h-44 overflow-hidden ${!project.thumbnail ? `bg-gradient-to-br ${projectGradient(project.id)}` : ''}`}>
-        {project.thumbnail ? (
-          <img src={project.thumbnail} alt={project.address} className="w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-white/20">
-            <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          </div>
-        )}
+      <div className="relative w-full h-44 overflow-hidden bg-stone-200">
+        <img
+          src={project.thumbnail || samplePhoto(project.id)}
+          alt={project.address}
+          className="w-full h-full object-cover"
+        />
         {/* Overlay for readability */}
         {project.thumbnail && <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />}
         {totalPhotos > 0 && (
