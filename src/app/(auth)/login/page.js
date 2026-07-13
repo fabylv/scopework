@@ -28,7 +28,7 @@ export default function LoginPage() {
       setError('Please confirm your email address first — check your inbox for a confirmation link from Supabase.');
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
   }
 
