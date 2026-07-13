@@ -50,8 +50,17 @@ function ProjectCard({ project }) {
       className="group block bg-white rounded-xl border border-[#E1E2E4] overflow-hidden hover:shadow-lg transition-shadow"
       style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.06)' }}
     >
-      {/* Photo placeholder */}
-      <div className={`relative w-full h-44 bg-gradient-to-br ${projectGradient(project.id)} overflow-hidden`}>
+      {/* Photo / placeholder */}
+      <div className={`relative w-full h-44 overflow-hidden ${!project.thumbnail ? `bg-gradient-to-br ${projectGradient(project.id)}` : ''}`}>
+        {project.thumbnail ? (
+          <img src={project.thumbnail} alt={project.address} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-white/20">
+            <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+        )}
+        {/* Overlay for readability */}
+        {project.thumbnail && <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />}
         {totalPhotos > 0 && (
           <div className="absolute bottom-3 left-3 rounded-full bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-white">
             {totalPhotos} photo{totalPhotos !== 1 ? 's' : ''}
@@ -66,9 +75,6 @@ function ProjectCard({ project }) {
             Draft
           </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center text-white/20">
-          <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
       </div>
 
       {/* Card body */}

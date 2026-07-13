@@ -130,6 +130,25 @@ export default function ProjectPage() {
   const tradeGroups = groupByTrade(repairs);
   const hasAnalyzedPhotos = (project?.photos?.filter((p) => p.analysisResult)?.length || 0) > 0;
 
+  async function createThumbnail(file) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxW = 600, maxH = 400;
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.65));
+      };
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function runAnalysis(pending) {
     if (!pending || !projectId) return;
     setBusy(true);
@@ -138,10 +157,13 @@ export default function ProjectPage() {
       const formData = new FormData();
       formData.append('photo', pending.file);
       formData.append('model', project?.model || 'openai');
-      const res = await fetch('/api/analyze-photo', { method: 'POST', body: formData });
+      const [res, thumbnail] = await Promise.all([
+        fetch('/api/analyze-photo', { method: 'POST', body: formData }),
+        !project?.thumbnail ? createThumbnail(pending.file) : Promise.resolve(null),
+      ]);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Analysis failed');
-      addPhotoResult(projectId, pending.id, data);
+      addPhotoResult(projectId, pending.id, data, thumbnail);
       setPendingPhoto(null);
     } catch (err) {
       setAnalysisError(err?.message || 'Analysis failed');

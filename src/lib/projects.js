@@ -54,6 +54,7 @@ function normalizeProject(project) {
     notes: project.notes || '',
     model: project.model || 'openai',
     createdAt: project.createdAt,
+    thumbnail: project.thumbnail || null,
     photos: Array.isArray(project.photos) ? project.photos : [],
     repairs: Array.isArray(project.repairs) ? project.repairs : [],
   };
@@ -92,7 +93,7 @@ export function createProject({ address, notes = '', model = 'openai' }) {
   return clone(project);
 }
 
-export function addPhotoResult(projectId, photoId, analysisResult) {
+export function addPhotoResult(projectId, photoId, analysisResult, thumbnail = null) {
   const projects = readStoredProjects();
   const index = projects.findIndex((project) => project.id === projectId);
 
@@ -125,6 +126,11 @@ export function addPhotoResult(projectId, photoId, analysisResult) {
       photoIndex,
     }))
   );
+
+  // Save thumbnail from first photo
+  if (thumbnail && !project.thumbnail) {
+    project.thumbnail = thumbnail;
+  }
 
   projects[index] = project;
   writeStoredProjects(projects);
