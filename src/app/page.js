@@ -1,4 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 function Step({ number, icon, title, desc }) {
   return (
@@ -55,7 +60,42 @@ function MockRepairCard({ severity, type, trade, cost }) {
   );
 }
 
+function UserAvatar({ user }) {
+  const avatar = user?.user_metadata?.avatar_url;
+  const name = user?.user_metadata?.full_name || user?.email || '?';
+  const initial = name.charAt(0).toUpperCase();
+
+  if (avatar) {
+    return (
+      <Image
+        src={avatar}
+        alt={name}
+        width={32}
+        height={32}
+        className="w-8 h-8 rounded-full object-cover border-2 border-[#FFA12B]"
+        unoptimized
+      />
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-[#FFA12B] flex items-center justify-center text-sm font-bold text-[#171C24]">
+      {initial}
+    </div>
+  );
+}
+
 export default function LandingPage() {
+  const [user, setUser] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data?.user ?? null);
+      setLoaded(true);
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
       {/* Nav */}
@@ -65,16 +105,27 @@ export default function LandingPage() {
             <div className="w-7 h-7 rounded-lg bg-[#FFA12B] flex items-center justify-center text-sm">🏗️</div>
             <p className="font-bold text-[#171C24] text-sm">ScopeWork</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/login" className="text-sm font-medium text-[#6E737B] hover:text-[#171C24] px-3 py-1.5 transition-colors">
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="text-sm font-bold text-[#171C24] bg-[#FFA12B] px-4 py-1.5 rounded-lg hover:bg-[#F28E1C] transition-colors"
-            >
-              Get started
-            </Link>
+          <div className="flex items-center gap-3">
+            {!loaded ? null : user ? (
+              <Link href="/dashboard" className="flex items-center gap-2 group">
+                <UserAvatar user={user} />
+                <span className="text-sm font-semibold text-[#171C24] hidden sm:inline group-hover:text-[#FFA12B] transition-colors">
+                  Dashboard →
+                </span>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium text-[#6E737B] hover:text-[#171C24] px-3 py-1.5 transition-colors">
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="text-sm font-bold text-[#171C24] bg-[#FFA12B] px-4 py-1.5 rounded-lg hover:bg-[#F28E1C] transition-colors"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
