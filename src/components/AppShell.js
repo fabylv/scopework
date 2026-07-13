@@ -117,8 +117,27 @@ export default function AppShell({ children }) {
         </Link>
       </div>
 
+      {/* Mobile bottom nav */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[#151C24] border-t border-[#222B36] flex">
+        {NAV.map(({ href, label, icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-1 text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                active ? 'text-[#FFA12B]' : 'text-[#5A6270] hover:text-[#9AA0A8]'
+              }`}
+            >
+              <span className="text-lg leading-none">{icon}</span>
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Main content */}
-      <main className="flex-1 md:pt-0 pt-14 min-w-0">
+      <main className="flex-1 md:pt-0 pt-14 md:pb-0 pb-16 min-w-0">
         {children}
       </main>
     </div>
