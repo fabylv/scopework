@@ -5,62 +5,97 @@ import Image from 'next/image';
 import { useRef, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { addPhotoError, addPhotoResult, getProject } from '@/lib/projects';
+import AppShell from '@/components/AppShell';
 
 const SEVERITY_ORDER = ['major', 'moderate', 'minor'];
 
-const SEVERITY_STYLES = {
-  major: 'border-l-4 border-l-red-500 bg-white',
-  moderate: 'border-l-4 border-l-orange-400 bg-white',
-  minor: 'border-l-4 border-l-yellow-400 bg-white',
-};
-
-const SEVERITY_LABEL = {
+const SEVERITY_BADGE = {
   major: 'bg-red-100 text-red-700',
   moderate: 'bg-orange-100 text-orange-700',
-  minor: 'bg-yellow-100 text-yellow-700',
+  minor: 'bg-[#F1F2F3] text-[#6E737B]',
 };
 
-const SEVERITY_ICONS = { major: '🔴', moderate: '🟠', minor: '🟡' };
+const TRADE_COLORS = {
+  PLUMBING:       'bg-blue-50 text-blue-700',
+  ROOFING:        'bg-slate-100 text-slate-600',
+  ELECTRICAL:     'bg-yellow-50 text-yellow-700',
+  HVAC:           'bg-purple-50 text-purple-700',
+  'WINDOWS & DOORS': 'bg-green-50 text-green-700',
+  FLOORING:       'bg-orange-50 text-orange-700',
+  STRUCTURAL:     'bg-red-50 text-red-700',
+  COSMETIC:       'bg-pink-50 text-pink-700',
+  GENERAL:        'bg-gray-100 text-gray-600',
+};
+
+function inferTrade(type = '') {
+  const t = type.toLowerCase();
+  if (/roof|shingle|gutter|fascia|soffit/.test(t)) return 'ROOFING';
+  if (/plumb|pipe|water|leak|drain|faucet|toilet|sewage/.test(t)) return 'PLUMBING';
+  if (/electric|outlet|wir|panel|circuit|breaker|switch/.test(t)) return 'ELECTRICAL';
+  if (/hvac|heat|cool|furnace|\bac\b|air cond|duct/.test(t)) return 'HVAC';
+  if (/window|door|frame|slider|garage door/.test(t)) return 'WINDOWS & DOORS';
+  if (/floor|tile|carpet|hardwood|laminate|vinyl/.test(t)) return 'FLOORING';
+  if (/foundation|structural|crack|wall|ceiling|drywall|siding/.test(t)) return 'STRUCTURAL';
+  if (/paint|cabinet|trim|cosmetic|finish|stain|refinish/.test(t)) return 'COSMETIC';
+  return 'GENERAL';
+}
+
+function estimateCostRange(severity) {
+  if (severity === 'major')    return ['$1,500', '$5,000+'];
+  if (severity === 'moderate') return ['$400',   '$1,500'];
+  return                              ['$100',   '$500'];
+}
 
 function getModelLabel(m) {
   return m === 'anthropic' ? 'Claude' : m === 'google' ? 'Gemini' : 'GPT-4o';
 }
 
-function getSeverityCounts(repairs = []) {
+function countBySeverity(repairs = []) {
   return repairs.reduce(
     (acc, r) => { const s = r?.severity || 'minor'; if (acc[s] !== undefined) acc[s]++; return acc; },
     { major: 0, moderate: 0, minor: 0 }
   );
 }
 
-function sortBySeverity(repairs = []) {
-  return [...repairs].sort((a, b) => {
-    const d = SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
-    return d !== 0 ? d : (b.confidence || 0) - (a.confidence || 0);
-  });
+function estimateTotalRange(repairs = []) {
+  const c = countBySeverity(repairs);
+  const low  = c.major * 1500 + c.moderate * 400 + c.minor * 100;
+  const high = c.major * 5000 + c.moderate * 1500 + c.minor * 500;
+  return { low, high };
 }
 
-function RepairCard({ repair }) {
+function groupByTrade(repairs = []) {
+  const groups = {};
+  repairs.forEach((r) => {
+    const trade = inferTrade(r.type);
+    if (!groups[trade]) groups[trade] = [];
+    groups[trade].push(r);
+  });
+  return groups;
+}
+
+function RepairRow({ repair }) {
+  const [low, high] = estimateCostRange(repair.severity);
   return (
-    <div className={`rounded-xl border border-stone-200 shadow-sm overflow-hidden ${SEVERITY_STYLES[repair.severity]}`}>
-      <div className="px-4 py-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-900 leading-snug">{repair.type}</p>
-          <p className="text-xs text-slate-500 mt-0.5">📍 {repair.location}</p>
-          <p className="text-xs font-semibold text-slate-400 mt-1.5 uppercase tracking-wide">
-            Photo {repair.photoIndex} · {Math.round((repair.confidence || 0) * 100)}% confidence
-          </p>
-        </div>
-        <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full capitalize ${SEVERITY_LABEL[repair.severity]}`}>
-          {SEVERITY_ICONS[repair.severity]} {repair.severity}
-        </span>
+    <div className="flex items-center gap-3 py-3 px-4 border-b border-[#F0F1F3] last:border-0">
+      {/* Thumbnail placeholder */}
+      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 shrink-0 flex items-center justify-center text-slate-500">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </div>
-      {repair.needsCloserPhoto && repair.guidance && (
-        <div className="border-t border-stone-100 bg-amber-50 px-4 py-2.5">
-          <p className="text-xs font-semibold text-amber-700">📸 Better photo needed</p>
-          <p className="text-xs text-amber-600 mt-0.5">{repair.guidance}</p>
-        </div>
-      )}
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-[#171C24] leading-snug">{repair.type}</p>
+        <p className="text-xs text-[#9AA0A8] mt-0.5 truncate">📍 {repair.location}</p>
+      </div>
+      {/* Severity */}
+      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${SEVERITY_BADGE[repair.severity]}`}>
+        {repair.severity.charAt(0).toUpperCase() + repair.severity.slice(1)}
+      </span>
+      {/* Cost */}
+      <div className="text-right shrink-0 ml-1">
+        <p className="text-sm font-bold text-[#171C24]">{low} – {high}</p>
+        <p className="text-[10px] text-[#9AA0A8] font-semibold uppercase tracking-wide mt-0.5">Estimate</p>
+      </div>
     </div>
   );
 }
@@ -72,7 +107,6 @@ export default function ProjectPage() {
   const [pendingPhoto, setPendingPhoto] = useState(null);
   const [analysisError, setAnalysisError] = useState('');
   const [busy, setBusy] = useState(false);
-
   const [project, setProject] = useState(null);
 
   useEffect(() => {
@@ -90,8 +124,10 @@ export default function ProjectPage() {
   }, [projectId]);
 
   const repairs = Array.isArray(project?.repairs) ? project.repairs : [];
-  const counts = getSeverityCounts(repairs);
-  const orderedRepairs = sortBySeverity(repairs);
+  const counts = countBySeverity(repairs);
+  const { low, high } = estimateTotalRange(repairs);
+  const hasEstimate = repairs.length > 0;
+  const tradeGroups = groupByTrade(repairs);
   const hasAnalyzedPhotos = (project?.photos?.filter((p) => p.analysisResult)?.length || 0) > 0;
 
   async function runAnalysis(pending) {
@@ -121,14 +157,10 @@ export default function ProjectPage() {
     const preview = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Could not load photo preview.'));
+      reader.onerror = () => reject(new Error('Could not load photo.'));
       reader.readAsDataURL(file);
     });
-    const pending = {
-      id: crypto?.randomUUID?.() || `photo_${Date.now()}`,
-      file,
-      preview,
-    };
+    const pending = { id: crypto?.randomUUID?.() || `photo_${Date.now()}`, file, preview };
     setPendingPhoto(pending);
     setAnalysisError('');
     await runAnalysis(pending);
@@ -142,169 +174,171 @@ export default function ProjectPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  if (!projectId) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 max-w-sm w-full text-center">
-          <p className="text-slate-700 font-semibold">Project not found</p>
-          <Link href="/" className="mt-4 inline-flex rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white">
-            Back to projects
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-stone-50">
-      {/* Sticky dark header */}
-      <header className="sticky top-0 z-20 bg-slate-900 px-4 py-3 flex items-center gap-3 shadow-lg">
-        <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-white/20 transition text-sm">
-          ←
+    <AppShell>
+      <div className="px-6 py-8 max-w-3xl">
+        {/* Back */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-[#6E737B] hover:text-[#171C24] mb-6 transition-colors"
+        >
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          All Projects
         </Link>
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-sm leading-tight truncate">{project?.address || 'Loading...'}</p>
-          <p className="text-slate-400 text-xs">{getModelLabel(project?.model || 'openai')}</p>
-        </div>
-        {hasAnalyzedPhotos && (
-          <Link
-            href={`/project/${projectId}/report`}
-            className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20"
-          >
-            Report →
-          </Link>
-        )}
-      </header>
 
-      {/* Stats bar */}
-      <div className="bg-slate-800 px-4 py-3">
-        <div className="mx-auto max-w-2xl flex items-center gap-4 text-sm">
-          <span className="text-slate-300 font-semibold">{project?.photos?.length || 0} photos</span>
-          <span className="text-slate-600">·</span>
-          <span className="text-slate-300 font-semibold">{repairs.length} repairs</span>
-          {counts.major > 0 && (
-            <>
-              <span className="text-slate-600">·</span>
-              <span className="text-red-400 font-bold">{counts.major} major</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      <main className="mx-auto max-w-2xl px-4 py-5 pb-28">
-        {/* Empty state */}
-        {(!project || project.photos.length === 0) && (
-          <div className="rounded-2xl border-2 border-dashed border-stone-300 bg-white p-8 text-center mb-4">
-            <div className="text-5xl mb-3">🏠</div>
-            <h2 className="text-lg font-black text-slate-900">Ready to inspect</h2>
-            <p className="text-sm text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-              Walk the property and tap <strong>Add Photo</strong> below to start capturing repairs.
-            </p>
+        {/* Hero dark card */}
+        <div className="rounded-xl bg-[#1E2530] p-6 mb-6" style={{ boxShadow: '0 8px 32px rgba(15,23,42,0.18)' }}>
+          {/* Status badge */}
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF3DE] px-3 py-1 mb-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#FFA12B]" />
+            <span className="text-xs font-bold text-[#8A6400]">
+              {hasAnalyzedPhotos ? 'AI Estimate · Estimate Ready' : 'AI Estimate · No Photos Yet'}
+            </span>
           </div>
-        )}
+
+          {/* Title + address */}
+          <h1 className="text-2xl font-bold text-white leading-tight">{project?.address || 'Loading...'}</h1>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#5A6270" strokeWidth={2}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <p className="text-sm text-[#5A6270]">{project?.address}</p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-[#2A323C]">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Issues Found</p>
+              <p className="text-3xl font-black text-white mt-1">{repairs.length}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Photos Analyzed</p>
+              <p className="text-3xl font-black text-white mt-1">{project?.photos?.length || 0}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Total Estimate</p>
+              {hasEstimate ? (
+                <p className="text-xl font-black text-white mt-1 leading-tight">${low.toLocaleString()} – ${high.toLocaleString()}</p>
+              ) : (
+                <p className="text-3xl font-black text-[#3A4250] mt-1">—</p>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-[#2A323C]">
+            <div className="flex gap-2 flex-1">
+              <button className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export PDF
+              </button>
+              {hasAnalyzedPhotos && (
+                <Link
+                  href={`/project/${projectId}/report`}
+                  className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors"
+                >
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  Share Link
+                </Link>
+              )}
+            </div>
+            <div className="flex rounded-lg overflow-hidden border border-[#2A323C]">
+              <button className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-[#FFA12B] text-[#171C24]">
+                🏠 Home Depot Pricing
+              </button>
+              <button className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#5A6270] hover:text-[#C5CAD4] bg-[#1E2530] hover:bg-[#2A323C] transition-colors">
+                🔧 My Contractor
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Repair list */}
-        {orderedRepairs.length > 0 && (
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 flex items-center justify-between border-b border-stone-100">
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Repair List</h2>
-              <div className="flex items-center gap-2 text-xs">
-                {counts.major > 0 && <span className="text-red-600 font-bold">{counts.major}🔴</span>}
-                {counts.moderate > 0 && <span className="text-orange-500 font-bold">{counts.moderate}🟠</span>}
-                {counts.minor > 0 && <span className="text-yellow-500 font-bold">{counts.minor}🟡</span>}
-              </div>
-            </div>
-            <div className="p-4 space-y-2">
-              {SEVERITY_ORDER.map((severity) => {
-                const items = orderedRepairs.filter((r) => r.severity === severity);
-                if (!items.length) return null;
-                return (
-                  <div key={severity}>
-                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 px-1 mb-2 mt-3 first:mt-0">
-                      {severity} · {items.length}
-                    </p>
-                    <div className="space-y-2">
-                      {items.map((repair, i) => (
-                        <RepairCard key={`${repair.photoId}-${i}`} repair={repair} />
-                      ))}
+        {repairs.length === 0 ? (
+          <div className="bg-white rounded-xl border border-[#E1E2E4] border-dashed p-8 text-center" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+            <div className="text-4xl mb-3">📷</div>
+            <p className="font-bold text-[#171C24]">No repairs yet</p>
+            <p className="text-sm text-[#6E737B] mt-1">Tap "Add Photo" to start capturing.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(tradeGroups).map(([trade, items]) => {
+              const tradeLow  = items.reduce((s, r) => s + parseInt(estimateCostRange(r.severity)[0].replace(/[$,+]/g, ''), 10), 0);
+              const tradeHigh = items.reduce((s, r) => {
+                const h = estimateCostRange(r.severity)[1].replace(/[$,+]/g, '');
+                return s + parseInt(h, 10);
+              }, 0);
+              return (
+                <div key={trade} className="bg-white rounded-xl border border-[#E1E2E4] overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+                  {/* Group header */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#FAF9F6] border-b border-[#F0F1F3]">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${TRADE_COLORS[trade] || 'bg-gray-100 text-gray-600'}`}>
+                        {trade}
+                      </span>
+                      <span className="text-xs text-[#9AA0A8]">{items.length} item{items.length !== 1 ? 's' : ''}</span>
                     </div>
+                    <p className="text-sm font-bold text-[#171C24]">${tradeLow.toLocaleString()} – ${tradeHigh.toLocaleString()}+</p>
                   </div>
-                );
-              })}
-            </div>
+                  {/* Rows */}
+                  <div>
+                    {items.map((repair, i) => (
+                      <RepairRow key={`${repair.photoId}-${i}`} repair={repair} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
-      </main>
 
-      {/* Sticky bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-slate-900 border-t border-slate-800 px-4 py-3 safe-area-pb">
-        <div className="mx-auto max-w-2xl">
+        {/* Add Photo — bottom sticky (mobile) */}
+        <div className="fixed bottom-0 inset-x-0 md:hidden bg-white border-t border-[#E1E2E4] px-4 py-3">
           <button
-            type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full rounded-2xl bg-amber-500 py-4 text-base font-bold text-white shadow-xl shadow-amber-500/20 hover:bg-amber-600 active:scale-[0.98] transition-transform"
+            className="w-full rounded-lg bg-[#FFA12B] py-3 text-sm font-bold text-[#171C24]"
           >
             📷 Add Photo
           </button>
         </div>
+
+        {/* Desktop add photo */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="hidden md:flex items-center gap-2 mt-6 rounded-lg bg-[#FFA12B] px-5 py-2.5 text-sm font-bold text-[#171C24] hover:bg-[#F28E1C] transition-colors"
+          style={{ boxShadow: '0 4px 16px rgba(255,161,43,0.25)' }}
+        >
+          📷 Add Photo
+        </button>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
-        className="hidden"
-      />
+      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
 
       {/* Analysis overlay */}
       {pendingPhoto && (
         <>
           <style>{`
-            @keyframes scan {
-              0% { top: 5%; opacity: 0; }
-              10% { opacity: 1; }
-              90% { opacity: 1; }
-              100% { top: 95%; opacity: 0; }
-            }
+            @keyframes scan { 0%{top:5%;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:95%;opacity:0} }
             .scan-line { animation: scan 2.5s ease-in-out infinite; }
           `}</style>
           <div className="fixed inset-0 z-50 bg-black flex flex-col">
-            {/* Photo with scan overlay */}
             <div className="relative flex-1 overflow-hidden">
-              <Image
-                src={pendingPhoto.preview}
-                alt="Analyzing"
-                fill
-                unoptimized
-                className="object-cover opacity-70"
-              />
+              <Image src={pendingPhoto.preview} alt="Analyzing" fill unoptimized className="object-cover opacity-60" />
               {busy && (
                 <div className="absolute inset-0">
-                  <div
-                    className="scan-line absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_12px_2px_rgba(251,191,36,0.6)]"
-                  />
+                  <div className="scan-line absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-[#FFA12B] to-transparent" style={{ filter: 'drop-shadow(0 0 8px #FFA12B)' }} />
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
-
-              {/* Top badge */}
-              <div className="absolute top-4 left-0 right-0 flex justify-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
+              <div className="absolute top-4 inset-x-0 flex justify-center">
                 <div className="rounded-full bg-black/60 backdrop-blur-sm px-4 py-1.5 border border-white/10">
-                  <p className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                    {getModelLabel(project?.model || 'openai')}
-                  </p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#FFA12B]">{getModelLabel(project?.model || 'openai')}</p>
                 </div>
               </div>
             </div>
-
-            {/* Bottom panel */}
-            <div className="bg-slate-900 px-5 pt-5 pb-8">
+            <div className="bg-[#151C24] px-5 pt-5 pb-8">
               {busy ? (
                 <div className="text-center mb-5">
                   <p className="text-xl font-black text-white">Scanning for repairs...</p>
-                  <p className="text-sm text-slate-400 mt-1">AI is analyzing every surface and defect</p>
+                  <p className="text-sm text-[#5A6270] mt-1">AI is analyzing every surface and defect</p>
                 </div>
               ) : analysisError ? (
                 <div className="mb-5">
@@ -316,40 +350,20 @@ export default function ProjectPage() {
                   <p className="text-xl font-black text-white">Preparing scan...</p>
                 </div>
               )}
-
               <div className="flex gap-3">
                 {analysisError ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => runAnalysis(pendingPhoto)}
-                      className="flex-1 rounded-2xl bg-amber-500 py-3.5 text-sm font-bold text-white hover:bg-amber-600"
-                    >
-                      Try Again
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSkip}
-                      className="flex-1 rounded-2xl bg-slate-700 py-3.5 text-sm font-bold text-slate-300 hover:bg-slate-600"
-                    >
-                      Skip Photo
-                    </button>
+                    <button onClick={() => runAnalysis(pendingPhoto)} className="flex-1 rounded-lg bg-[#FFA12B] py-3 text-sm font-bold text-[#171C24]">Try Again</button>
+                    <button onClick={handleSkip} className="flex-1 rounded-lg bg-[#2A323C] py-3 text-sm font-bold text-[#6E737B]">Skip</button>
                   </>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleSkip}
-                    disabled={busy}
-                    className="flex-1 rounded-2xl bg-slate-700 py-3.5 text-sm font-bold text-slate-300 hover:bg-slate-600 disabled:opacity-40"
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={handleSkip} disabled={busy} className="flex-1 rounded-lg bg-[#2A323C] py-3 text-sm font-bold text-[#6E737B] disabled:opacity-40">Cancel</button>
                 )}
               </div>
             </div>
           </div>
         </>
       )}
-    </div>
+    </AppShell>
   );
 }

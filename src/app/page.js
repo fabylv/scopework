@@ -3,17 +3,10 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getProjects } from '@/lib/projects';
-
-const SEVERITY_ORDER = ['major', 'moderate', 'minor'];
-
-const SEVERITY_DOT = {
-  major: 'bg-red-500',
-  moderate: 'bg-orange-400',
-  minor: 'bg-yellow-400',
-};
+import AppShell from '@/components/AppShell';
 
 function formatDate(value) {
-  if (!value) return 'Recently';
+  if (!value) return '';
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value));
 }
 
@@ -24,69 +17,85 @@ function countBySeverity(repairs = []) {
   );
 }
 
-function SeverityBar({ repairs = [] }) {
-  const total = repairs.length;
-  if (total === 0) return null;
-  const counts = countBySeverity(repairs);
-  return (
-    <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-stone-100 mt-3">
-      {SEVERITY_ORDER.map((s) => {
-        const pct = (counts[s] / total) * 100;
-        if (pct === 0) return null;
-        return (
-          <div
-            key={s}
-            className={`h-full ${SEVERITY_DOT[s]}`}
-            style={{ width: `${pct}%` }}
-          />
-        );
-      })}
-    </div>
-  );
+function estimateRange(repairs = []) {
+  const c = countBySeverity(repairs);
+  const low = c.major * 1500 + c.moderate * 400 + c.minor * 100;
+  const high = c.major * 5000 + c.moderate * 1800 + c.minor * 500;
+  if (low === 0 && high === 0) return null;
+  return [`$${low.toLocaleString()}`, `$${high.toLocaleString()}`];
 }
 
-function ModelLabel(model) {
-  return model === 'anthropic' ? 'Claude' : model === 'google' ? 'Gemini' : 'GPT-4o';
+// Gradient placeholder by project id
+const GRADIENTS = [
+  'from-slate-600 to-slate-800',
+  'from-stone-500 to-stone-700',
+  'from-zinc-600 to-zinc-800',
+  'from-neutral-500 to-neutral-700',
+  'from-slate-500 to-slate-700',
+];
+
+function projectGradient(id = '') {
+  const n = id.charCodeAt(0) % GRADIENTS.length;
+  return GRADIENTS[n];
 }
 
 function ProjectCard({ project }) {
-  const counts = countBySeverity(project.repairs);
+  const range = estimateRange(project.repairs);
   const totalPhotos = project.photos?.length || 0;
-  const totalRepairs = project.repairs?.length || 0;
+  const hasEstimate = range !== null;
 
   return (
     <Link
       href={`/project/${project.id}`}
-      className="group block bg-white rounded-2xl shadow-sm border border-stone-200 p-5 transition hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]"
+      className="group block bg-white rounded-xl border border-[#E1E2E4] overflow-hidden hover:shadow-lg transition-shadow"
+      style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.06)' }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-base font-bold text-slate-900 leading-snug truncate">{project.address}</p>
-          <p className="text-xs text-slate-400 mt-0.5">{formatDate(project.createdAt)}</p>
-        </div>
-        <span className="shrink-0 text-xs font-semibold text-slate-500 bg-stone-100 px-2.5 py-1 rounded-full">
-          {ModelLabel(project.model)}
-        </span>
-      </div>
-
-      <div className="flex gap-3 mt-4">
-        <div className="flex-1 rounded-xl bg-stone-50 px-3 py-2.5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Photos</p>
-          <p className="text-2xl font-black text-slate-900">{totalPhotos}</p>
-        </div>
-        <div className="flex-1 rounded-xl bg-stone-50 px-3 py-2.5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Repairs</p>
-          <p className="text-2xl font-black text-slate-900">{totalRepairs}</p>
-        </div>
-        {counts.major > 0 && (
-          <div className="flex-1 rounded-xl bg-red-50 px-3 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-red-400">Major</p>
-            <p className="text-2xl font-black text-red-600">{counts.major}</p>
+      {/* Photo placeholder */}
+      <div className={`relative w-full h-44 bg-gradient-to-br ${projectGradient(project.id)} overflow-hidden`}>
+        {totalPhotos > 0 && (
+          <div className="absolute bottom-3 left-3 rounded-full bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-white">
+            {totalPhotos} photo{totalPhotos !== 1 ? 's' : ''}
           </div>
         )}
+        {hasEstimate ? (
+          <div className="absolute top-3 right-3 rounded-full bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1">
+            Estimate Ready
+          </div>
+        ) : (
+          <div className="absolute top-3 right-3 rounded-full bg-[#F1F2F3] text-[#6E737B] text-xs font-bold px-2.5 py-1">
+            Draft
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center text-white/20">
+          <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
       </div>
 
-      <SeverityBar repairs={project.repairs} />
+      {/* Card body */}
+      <div className="p-4">
+        <p className="font-bold text-[#171C24] text-base leading-snug line-clamp-1">{project.address}</p>
+        <div className="flex items-center gap-1 mt-1">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#9AA0A8" strokeWidth={2}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <p className="text-xs text-[#9AA0A8] truncate">{project.address}</p>
+        </div>
+
+        <div className="h-px bg-[#F0F1F3] my-3" />
+
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9AA0A8]">Estimated</p>
+            {hasEstimate ? (
+              <p className="text-base font-bold text-[#171C24] mt-0.5">{range[0]} – {range[1]}</p>
+            ) : (
+              <p className="text-base font-bold text-[#B0B6BE] mt-0.5">—</p>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-[#9AA0A8]">
+            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {formatDate(project.createdAt)}
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }
@@ -107,68 +116,54 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const hasProjects = projects.length > 0;
-
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-slate-900 px-5 pt-12 pb-6">
-        <div className="mx-auto max-w-2xl flex items-end justify-between gap-4">
+    <AppShell>
+      <div className="px-6 py-8 max-w-6xl">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 mb-6">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-1">Field Tool</p>
-            <h1 className="text-3xl font-black text-white tracking-tight">🏗️ ScopeWork</h1>
-            <p className="text-sm text-slate-400 mt-1">AI-powered repair estimator</p>
+            <h1 className="text-2xl font-bold text-[#171C24]">Projects</h1>
+            {projects.length > 0 && (
+              <p className="text-sm text-[#6E737B] mt-0.5">
+                {projects.length} active propert{projects.length !== 1 ? 'ies' : 'y'} · Estimates update in real time.
+              </p>
+            )}
           </div>
-          {hasProjects && (
-            <Link
-              href="/project/new"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20"
-            >
-              + New
-            </Link>
-          )}
+          <Link
+            href="/project/new"
+            className="hidden md:flex items-center gap-1.5 rounded-lg bg-[#FFA12B] px-4 py-2 text-sm font-bold text-[#171C24] hover:bg-[#F28E1C] transition-colors shrink-0"
+          >
+            + New Project
+          </Link>
         </div>
-      </header>
 
-      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-6">
-        {!hasProjects ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-            <div className="w-20 h-20 rounded-3xl bg-slate-900 flex items-center justify-center text-4xl mb-5 shadow-xl">
+        {/* Empty state */}
+        {projects.length === 0 ? (
+          <div className="flex flex-col items-center justify-center min-h-[55vh] text-center px-4">
+            <div className="w-20 h-20 rounded-2xl bg-[#151C24] flex items-center justify-center text-4xl mb-5 shadow-xl">
               📋
             </div>
-            <h2 className="text-2xl font-black text-slate-900">No inspections yet</h2>
-            <p className="mt-2 text-slate-500 max-w-xs leading-relaxed">
+            <h2 className="text-xl font-bold text-[#171C24]">No projects yet</h2>
+            <p className="mt-2 text-[#6E737B] text-sm max-w-xs leading-relaxed">
               Walk a property, snap photos, and let AI build your scope of work — repair by repair.
             </p>
             <Link
               href="/project/new"
-              className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-8 py-4 text-base font-bold text-white shadow-xl shadow-amber-500/25 hover:bg-amber-600 active:scale-95 transition-transform"
+              className="mt-7 inline-flex items-center gap-2 rounded-lg bg-[#FFA12B] px-6 py-3 text-sm font-bold text-[#171C24] hover:bg-[#F28E1C] transition-colors shadow-lg"
+              style={{ boxShadow: '0 8px 24px rgba(255,161,43,0.3)' }}
             >
               Start First Inspection →
             </Link>
+            <Link href="/test-photo" className="mt-3 text-xs text-[#9AA0A8] hover:text-[#6E737B]">
+              Or try the photo analyzer →
+            </Link>
           </div>
         ) : (
-          <div className="space-y-3 pb-24">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 px-1 mb-4">
-              {projects.length} project{projects.length !== 1 ? 's' : ''}
-            </p>
-            {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
           </div>
         )}
-      </main>
-
-      {/* Mobile FAB */}
-      {hasProjects && (
-        <Link
-          href="/project/new"
-          className="sm:hidden fixed bottom-6 right-5 flex items-center justify-center w-14 h-14 rounded-full bg-amber-500 text-white text-2xl font-bold shadow-xl shadow-amber-500/30 hover:bg-amber-600 active:scale-95 transition-transform"
-          aria-label="New project"
-        >
-          +
-        </Link>
-      )}
-    </div>
+      </div>
+    </AppShell>
   );
 }

@@ -4,22 +4,44 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getProject } from '@/lib/projects';
+import AppShell from '@/components/AppShell';
 
-const SEVERITY_ORDER = ['major', 'moderate', 'minor'];
-
-const SEVERITY_STYLES = {
-  major: 'border-l-4 border-l-red-500 bg-white',
-  moderate: 'border-l-4 border-l-orange-400 bg-white',
-  minor: 'border-l-4 border-l-yellow-400 bg-white',
-};
-
-const SEVERITY_LABEL = {
-  major: 'bg-red-100 text-red-700',
+const SEVERITY_BADGE = {
+  major:    'bg-red-100 text-red-700',
   moderate: 'bg-orange-100 text-orange-700',
-  minor: 'bg-yellow-100 text-yellow-700',
+  minor:    'bg-[#F1F2F3] text-[#6E737B]',
 };
 
-const SEVERITY_ICONS = { major: '🔴', moderate: '🟠', minor: '🟡' };
+const TRADE_COLORS = {
+  PLUMBING:          'bg-blue-50 text-blue-700',
+  ROOFING:           'bg-slate-100 text-slate-600',
+  ELECTRICAL:        'bg-yellow-50 text-yellow-700',
+  HVAC:              'bg-purple-50 text-purple-700',
+  'WINDOWS & DOORS': 'bg-green-50 text-green-700',
+  FLOORING:          'bg-orange-50 text-orange-700',
+  STRUCTURAL:        'bg-red-50 text-red-700',
+  COSMETIC:          'bg-pink-50 text-pink-700',
+  GENERAL:           'bg-gray-100 text-gray-600',
+};
+
+function inferTrade(type = '') {
+  const t = type.toLowerCase();
+  if (/roof|shingle|gutter|fascia|soffit/.test(t)) return 'ROOFING';
+  if (/plumb|pipe|water|leak|drain|faucet|toilet|sewage/.test(t)) return 'PLUMBING';
+  if (/electric|outlet|wir|panel|circuit|breaker|switch/.test(t)) return 'ELECTRICAL';
+  if (/hvac|heat|cool|furnace|\bac\b|air cond|duct/.test(t)) return 'HVAC';
+  if (/window|door|frame|slider|garage door/.test(t)) return 'WINDOWS & DOORS';
+  if (/floor|tile|carpet|hardwood|laminate|vinyl/.test(t)) return 'FLOORING';
+  if (/foundation|structural|crack|wall|ceiling|drywall|siding/.test(t)) return 'STRUCTURAL';
+  if (/paint|cabinet|trim|cosmetic|finish|stain|refinish/.test(t)) return 'COSMETIC';
+  return 'GENERAL';
+}
+
+function estimateCostRange(severity) {
+  if (severity === 'major')    return [1500, 5000];
+  if (severity === 'moderate') return [400,  1500];
+  return                              [100,  500];
+}
 
 function formatDate(value) {
   if (!value) return '';
@@ -30,34 +52,33 @@ function getModelLabel(m) {
   return m === 'anthropic' ? 'Claude' : m === 'google' ? 'Gemini' : 'GPT-4o';
 }
 
-function getSeverityCounts(repairs = []) {
-  return repairs.reduce(
-    (acc, r) => { const s = r?.severity || 'minor'; if (acc[s] !== undefined) acc[s]++; return acc; },
-    { major: 0, moderate: 0, minor: 0 }
-  );
-}
-
-function sortBySeverity(repairs = []) {
-  return [...repairs].sort((a, b) => {
-    const d = SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
-    return d !== 0 ? d : (b.confidence || 0) - (a.confidence || 0);
+function groupByTrade(repairs = []) {
+  const groups = {};
+  repairs.forEach((r) => {
+    const trade = inferTrade(r.type);
+    if (!groups[trade]) groups[trade] = [];
+    groups[trade].push(r);
   });
+  return groups;
 }
 
-function RepairCard({ repair }) {
+function RepairRow({ repair }) {
+  const [low, high] = estimateCostRange(repair.severity);
   return (
-    <div className={`rounded-xl border border-stone-200 shadow-sm overflow-hidden ${SEVERITY_STYLES[repair.severity]}`}>
-      <div className="px-4 py-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-900 leading-snug">{repair.type}</p>
-          <p className="text-xs text-slate-500 mt-0.5">📍 {repair.location}</p>
-          <p className="text-xs font-semibold text-slate-400 mt-1.5 uppercase tracking-wide">
-            Photo {repair.photoIndex} · {Math.round((repair.confidence || 0) * 100)}% confidence
-          </p>
-        </div>
-        <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full capitalize ${SEVERITY_LABEL[repair.severity]}`}>
-          {SEVERITY_ICONS[repair.severity]} {repair.severity}
-        </span>
+    <div className="flex items-center gap-3 py-3 px-4 border-b border-[#F0F1F3] last:border-0">
+      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 shrink-0 flex items-center justify-center text-slate-500">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-[#171C24] leading-snug">{repair.type}</p>
+        <p className="text-xs text-[#9AA0A8] mt-0.5 truncate">📍 {repair.location}</p>
+      </div>
+      <span className={`text-xs font-bold px-2 py-0.5 rounded-full capitalize ${SEVERITY_BADGE[repair.severity]}`}>
+        {repair.severity}
+      </span>
+      <div className="text-right shrink-0">
+        <p className="text-sm font-bold text-[#171C24]">${low.toLocaleString()} – ${high.toLocaleString()}</p>
+        <p className="text-[10px] text-[#9AA0A8] font-semibold uppercase tracking-wide mt-0.5">Estimate</p>
       </div>
     </div>
   );
@@ -66,7 +87,6 @@ function RepairCard({ repair }) {
 export default function ReportPage() {
   const params = useParams();
   const projectId = params?.id;
-
   const [project, setProject] = useState(null);
 
   useEffect(() => {
@@ -83,151 +103,143 @@ export default function ReportPage() {
     };
   }, [projectId]);
 
-  const repairs = Array.isArray(project?.repairs) ? project.repairs : [];
-  const counts = getSeverityCounts(repairs);
-  const orderedRepairs = sortBySeverity(repairs);
-
-  if (!projectId || !project) {
+  if (!project) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 max-w-sm w-full text-center">
-          <p className="text-slate-700 font-semibold">{!projectId ? 'Report not found' : 'Loading report...'}</p>
-          <Link href="/" className="mt-4 inline-flex rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white">
-            Back to projects
-          </Link>
+      <AppShell>
+        <div className="px-6 py-8 flex items-center justify-center min-h-[60vh]">
+          <p className="text-[#6E737B]">{projectId ? 'Loading report...' : 'Report not found'}</p>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
+  const repairs = Array.isArray(project.repairs) ? project.repairs : [];
+  const tradeGroups = groupByTrade(repairs);
+  const totalLow  = repairs.reduce((s, r) => s + estimateCostRange(r.severity)[0], 0);
+  const totalHigh = repairs.reduce((s, r) => s + estimateCostRange(r.severity)[1], 0);
+  const counts = repairs.reduce(
+    (acc, r) => { const s = r?.severity || 'minor'; if (acc[s] !== undefined) acc[s]++; return acc; },
+    { major: 0, moderate: 0, minor: 0 }
+  );
+
   return (
-    <div className="min-h-screen bg-stone-50">
-      {/* Dark report header */}
-      <header className="bg-slate-900 px-5 pt-10 pb-7">
-        <div className="mx-auto max-w-2xl">
-          <Link
-            href={`/project/${projectId}`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-white transition-colors"
-          >
-            ← Back to Inspection
-          </Link>
-          <div className="mt-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-1">Repair Report</p>
-            <h1 className="text-2xl font-black text-white leading-tight">{project.address}</h1>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-sm text-slate-400">{formatDate(project.createdAt)}</span>
-              <span className="text-slate-600">·</span>
-              <span className="text-xs font-semibold text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full">
-                {getModelLabel(project.model)}
-              </span>
+    <AppShell>
+      <div className="px-6 py-8 max-w-3xl">
+        {/* Back */}
+        <Link
+          href={`/project/${projectId}`}
+          className="inline-flex items-center gap-1.5 text-sm text-[#6E737B] hover:text-[#171C24] mb-6 transition-colors"
+        >
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back to Inspection
+        </Link>
+
+        {/* Hero dark card */}
+        <div className="rounded-xl bg-[#1E2530] p-6 mb-6" style={{ boxShadow: '0 8px 32px rgba(15,23,42,0.18)' }}>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF3DE] px-3 py-1 mb-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#FFA12B]" />
+            <span className="text-xs font-bold text-[#8A6400]">Repair Report · {getModelLabel(project.model)}</span>
+          </div>
+
+          <h1 className="text-2xl font-bold text-white">{project.address}</h1>
+          <p className="text-sm text-[#5A6270] mt-1">{formatDate(project.createdAt)}</p>
+
+          <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-[#2A323C]">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Issues Found</p>
+              <p className="text-3xl font-black text-white mt-1">{repairs.length}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Photos Analyzed</p>
+              <p className="text-3xl font-black text-white mt-1">{project.photos?.length || 0}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A6270]">Total Estimate</p>
+              <p className="text-xl font-black text-white mt-1 leading-tight">
+                ${totalLow.toLocaleString()} – ${totalHigh.toLocaleString()}
+              </p>
             </div>
           </div>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-2xl px-4 py-5 pb-10 space-y-4">
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 col-span-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Repairs</p>
-            <p className="text-5xl font-black text-slate-900 mt-1">{repairs.length}</p>
-            <p className="text-sm text-slate-400 mt-1">
-              across {project.photos?.length || 0} photo{(project.photos?.length || 0) !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <div className="bg-red-50 rounded-2xl border border-red-100 shadow-sm p-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-red-400">Major</p>
-            <p className="text-4xl font-black text-red-600 mt-1">{counts.major}</p>
-          </div>
-          <div className="bg-orange-50 rounded-2xl border border-orange-100 shadow-sm p-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-orange-400">Moderate</p>
-            <p className="text-4xl font-black text-orange-500 mt-1">{counts.moderate}</p>
-          </div>
-          <div className="bg-yellow-50 rounded-2xl border border-yellow-100 shadow-sm p-4 col-span-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-yellow-500">Minor</p>
-            <p className="text-4xl font-black text-yellow-600 mt-1">{counts.minor}</p>
+          {/* Action buttons */}
+          <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#2A323C]">
+            <button
+              onClick={() => console.log('Export PDF', projectId)}
+              className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors"
+            >
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export PDF
+            </button>
+            <button
+              onClick={() => console.log('Share', projectId)}
+              className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors"
+            >
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share Link
+            </button>
           </div>
         </div>
 
-        {/* Repair list */}
-        {orderedRepairs.length > 0 && (
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Full Repair List</h2>
-              <button
-                type="button"
-                onClick={() => console.log('Share report', projectId)}
-                className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700"
-              >
-                📤 Share
-              </button>
+        {/* Severity summary */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[
+            { label: 'Major',    count: counts.major,    bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-100' },
+            { label: 'Moderate', count: counts.moderate, bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-100' },
+            { label: 'Minor',    count: counts.minor,    bg: 'bg-[#FAF9F6]', text: 'text-[#6E737B]',  border: 'border-[#E1E2E4]' },
+          ].map(({ label, count, bg, text, border }) => (
+            <div key={label} className={`${bg} rounded-xl border ${border} p-4`}>
+              <p className={`text-xs font-bold uppercase tracking-widest ${text} opacity-70`}>{label}</p>
+              <p className={`text-4xl font-black ${text} mt-1`}>{count}</p>
             </div>
-            <div className="p-4 space-y-2">
-              {SEVERITY_ORDER.map((severity) => {
-                const items = orderedRepairs.filter((r) => r.severity === severity);
-                if (!items.length) return null;
-                return (
-                  <div key={severity}>
-                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 px-1 mb-2 mt-4 first:mt-0">
-                      {SEVERITY_ICONS[severity]} {severity} · {items.length}
-                    </p>
-                    <div className="space-y-2">
-                      {items.map((repair, i) => (
-                        <RepairCard key={`${repair.photoId}-${i}`} repair={repair} />
-                      ))}
+          ))}
+        </div>
+
+        {/* Repair list by trade */}
+        {repairs.length === 0 ? (
+          <div className="bg-white rounded-xl border border-dashed border-[#E1E2E4] p-8 text-center">
+            <p className="text-[#6E737B]">No repairs captured yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(tradeGroups).map(([trade, items]) => {
+              const tLow  = items.reduce((s, r) => s + estimateCostRange(r.severity)[0], 0);
+              const tHigh = items.reduce((s, r) => s + estimateCostRange(r.severity)[1], 0);
+              return (
+                <div key={trade} className="bg-white rounded-xl border border-[#E1E2E4] overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#FAF9F6] border-b border-[#F0F1F3]">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${TRADE_COLORS[trade] || 'bg-gray-100 text-gray-600'}`}>
+                        {trade}
+                      </span>
+                      <span className="text-xs text-[#9AA0A8]">{items.length} item{items.length !== 1 ? 's' : ''}</span>
                     </div>
+                    <p className="text-sm font-bold text-[#171C24]">${tLow.toLocaleString()} – ${tHigh.toLocaleString()}</p>
                   </div>
-                );
-              })}
-            </div>
+                  <div>
+                    {items.map((repair, i) => <RepairRow key={`${repair.photoId}-${i}`} repair={repair} />)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* Cost estimation teaser */}
-        <div className="bg-slate-900 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-              <h2 className="text-lg font-black text-white mt-0.5">Cost Estimation</h2>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-xl">
-              💰
-            </div>
-          </div>
-          {/* Placeholder blurred rows */}
-          <div className="space-y-2 opacity-40 pointer-events-none select-none">
-            {[
-              { label: 'Roof repair', amt: '$4,200–6,800' },
-              { label: 'Foundation crack', amt: '$1,500–2,200' },
-              { label: 'HVAC replacement', amt: '$6,000–9,500' },
-            ].map((row) => (
-              <div key={row.label} className="bg-slate-800 rounded-xl px-4 py-3 flex items-center justify-between">
-                <p className="text-sm text-slate-300 font-medium blur-[2px]">{row.label}</p>
-                <p className="text-sm font-bold text-white blur-[2px]">{row.amt}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-slate-500 mt-3 text-center">
-            Contractor rate profiles + material pricing coming in the next update
-          </p>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex gap-3 pt-2">
+        {/* Bottom nav */}
+        <div className="flex gap-3 mt-6">
           <Link
             href={`/project/${projectId}`}
-            className="flex-1 text-center rounded-xl border-2 border-stone-200 bg-white py-3 text-sm font-bold text-slate-700 hover:border-slate-300"
+            className="flex-1 text-center rounded-lg border border-[#E1E2E4] bg-white py-2.5 text-sm font-semibold text-[#4A5260] hover:bg-[#FAF9F6] transition-colors"
           >
-            ← Inspection
+            ← Back to Inspection
           </Link>
           <Link
             href="/"
-            className="flex-1 text-center rounded-xl border-2 border-stone-200 bg-white py-3 text-sm font-bold text-slate-700 hover:border-slate-300"
+            className="flex-1 text-center rounded-lg border border-[#E1E2E4] bg-white py-2.5 text-sm font-semibold text-[#4A5260] hover:bg-[#FAF9F6] transition-colors"
           >
-            🏠 All Projects
+            All Projects
           </Link>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

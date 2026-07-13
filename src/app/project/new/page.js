@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createProject } from '@/lib/projects';
+import AppShell from '@/components/AppShell';
 
 const MODEL_OPTIONS = [
   { id: 'openai', label: 'GPT-4o', desc: 'Fast & precise' },
@@ -34,30 +35,24 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      {/* Dark header */}
-      <header className="bg-slate-900 px-5 pt-12 pb-8">
-        <div className="mx-auto max-w-2xl">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-white transition-colors">
-            ← Back
-          </Link>
-          <div className="mt-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30">
-              📍
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-amber-400">New Inspection</p>
-              <h1 className="text-2xl font-black text-white leading-tight">Set up your project</h1>
-            </div>
-          </div>
-        </div>
-      </header>
+    <AppShell>
+      <div className="px-6 py-8 max-w-xl">
+        {/* Back */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-[#6E737B] hover:text-[#171C24] mb-6 transition-colors"
+        >
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          All Projects
+        </Link>
 
-      <main className="mx-auto w-full max-w-2xl px-4 py-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <h1 className="text-2xl font-bold text-[#171C24] mb-1">New Inspection</h1>
+        <p className="text-sm text-[#6E737B] mb-6">Set up a property to start capturing repair photos.</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Address */}
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-            <label htmlFor="address" className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
+          <div className="bg-white rounded-xl border border-[#E1E2E4] p-5" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+            <label htmlFor="address" className="block text-xs font-bold uppercase tracking-widest text-[#9AA0A8] mb-3">
               Property Address
             </label>
             <input
@@ -65,15 +60,15 @@ export default function NewProjectPage() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 Main St, Tampa, FL"
-              className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-slate-900 font-medium placeholder:text-slate-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition"
+              className="w-full rounded-lg border border-[#E1E2E4] bg-[#FAF9F6] px-4 py-2.5 text-sm text-[#171C24] font-medium placeholder:text-[#B0B6BE] outline-none focus:border-[#FFA12B] focus:ring-2 focus:ring-[#FFA12B]/20 transition"
               required
             />
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-            <label htmlFor="notes" className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-              Notes <span className="text-slate-300 normal-case tracking-normal font-normal">(optional)</span>
+          <div className="bg-white rounded-xl border border-[#E1E2E4] p-5" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+            <label htmlFor="notes" className="block text-xs font-bold uppercase tracking-widest text-[#9AA0A8] mb-3">
+              Notes <span className="text-[#C5CAD4] normal-case tracking-normal font-normal">(optional)</span>
             </label>
             <textarea
               id="notes"
@@ -81,13 +76,13 @@ export default function NewProjectPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. 3BR/2BA rental, built 1978, vacant"
               rows={3}
-              className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition resize-none"
+              className="w-full rounded-lg border border-[#E1E2E4] bg-[#FAF9F6] px-4 py-2.5 text-sm text-[#171C24] placeholder:text-[#B0B6BE] outline-none focus:border-[#FFA12B] focus:ring-2 focus:ring-[#FFA12B]/20 transition resize-none"
             />
           </div>
 
           {/* Model selector */}
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">AI Model</p>
+          <div className="bg-white rounded-xl border border-[#E1E2E4] p-5" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0A8] mb-3">AI Model</p>
             <div className="grid grid-cols-3 gap-2">
               {MODEL_OPTIONS.map((opt) => {
                 const active = model === opt.id;
@@ -96,18 +91,14 @@ export default function NewProjectPage() {
                     key={opt.id}
                     type="button"
                     onClick={() => setModel(opt.id)}
-                    className={`rounded-xl border-2 p-3 text-left transition ${
+                    className={`rounded-lg border-2 p-3 text-left transition ${
                       active
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-stone-200 bg-stone-50 hover:border-slate-300'
+                        ? 'border-[#FFA12B] bg-[#FFF3DE]'
+                        : 'border-[#E1E2E4] bg-[#FAF9F6] hover:border-[#C5CAD4]'
                     }`}
                   >
-                    <p className={`text-sm font-bold ${active ? 'text-amber-700' : 'text-slate-700'}`}>
-                      {opt.label}
-                    </p>
-                    <p className={`text-xs mt-0.5 ${active ? 'text-amber-500' : 'text-slate-400'}`}>
-                      {opt.desc}
-                    </p>
+                    <p className={`text-sm font-bold ${active ? 'text-[#171C24]' : 'text-[#4A5260]'}`}>{opt.label}</p>
+                    <p className={`text-xs mt-0.5 ${active ? 'text-[#8A6400]' : 'text-[#9AA0A8]'}`}>{opt.desc}</p>
                   </button>
                 );
               })}
@@ -115,20 +106,21 @@ export default function NewProjectPage() {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium">
-              ⚠️ {error}
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium">
+              {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-2xl bg-amber-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+            className="w-full rounded-lg bg-[#FFA12B] py-3 text-sm font-bold text-[#171C24] hover:bg-[#F28E1C] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ boxShadow: '0 4px 16px rgba(255,161,43,0.25)' }}
           >
-            {saving ? 'Starting...' : 'Start Inspection →'}
+            {saving ? 'Creating...' : 'Start Inspection →'}
           </button>
         </form>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
