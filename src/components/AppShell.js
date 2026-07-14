@@ -24,9 +24,15 @@ export default function AppShell({ children }) {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data?.user ?? null;
+      setUser(u);
+      if (!u) router.push('/login');
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
+      if (!u) router.push('/login');
     });
     return () => subscription.unsubscribe();
   }, []);
