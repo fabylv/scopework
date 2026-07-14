@@ -93,7 +93,7 @@ export function createProject({ address, notes = '', model = 'openai' }) {
   return clone(project);
 }
 
-export function addPhotoResult(projectId, photoId, analysisResult, thumbnail = null) {
+export function addPhotoResult(projectId, photoId, analysisResult, thumbnail = null, iconThumbnail = null) {
   const projects = readStoredProjects();
   const index = projects.findIndex((project) => project.id === projectId);
 
@@ -112,6 +112,7 @@ export function addPhotoResult(projectId, photoId, analysisResult, thumbnail = n
     timestamp: now,
     analysisResult: clone(analysisResult),
     error: null,
+    icon: iconThumbnail || null,
   });
 
   project.repairs.push(

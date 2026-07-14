@@ -62,12 +62,15 @@ function groupByTrade(repairs = []) {
   return groups;
 }
 
-function RepairRow({ repair }) {
+function RepairRow({ repair, photoIcon }) {
   const [low, high] = estimateCostRange(repair.severity);
   return (
     <div className="flex items-center gap-3 py-3 px-4 border-b border-[#F0F1F3] last:border-0">
-      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 shrink-0 flex items-center justify-center text-slate-500">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500">
+        {photoIcon
+          ? <img src={photoIcon} alt="" className="w-full h-full object-cover" />
+          : <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        }
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[#171C24] leading-snug">{repair.type}</p>
@@ -216,7 +219,13 @@ export default function ReportPage() {
                     <p className="text-sm font-bold text-[#171C24]">${tLow.toLocaleString()} – ${tHigh.toLocaleString()}</p>
                   </div>
                   <div>
-                    {items.map((repair, i) => <RepairRow key={`${repair.photoId}-${i}`} repair={repair} />)}
+                    {items.map((repair, i) => (
+                      <RepairRow
+                        key={`${repair.photoId}-${i}`}
+                        repair={repair}
+                        photoIcon={project?.photos?.find(p => p.id === repair.photoId)?.icon || null}
+                      />
+                    ))}
                   </div>
                 </div>
               );

@@ -74,13 +74,16 @@ function groupByTrade(repairs = []) {
   return groups;
 }
 
-function RepairRow({ repair }) {
+function RepairRow({ repair, photoIcon }) {
   const [low, high] = estimateCostRange(repair.severity);
   return (
     <div className="flex items-center gap-3 py-3 px-4 border-b border-[#F0F1F3] last:border-0">
-      {/* Thumbnail placeholder */}
-      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 shrink-0 flex items-center justify-center text-slate-500">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      {/* Photo thumbnail or placeholder */}
+      <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500">
+        {photoIcon
+          ? <img src={photoIcon} alt="" className="w-full h-full object-cover" />
+          : <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        }
       </div>
       {/* Info */}
       <div className="flex-1 min-w-0">
@@ -149,6 +152,26 @@ export default function ProjectPage() {
     });
   }
 
+  // Small square crop for repair row icons (96×96, ~3–6 KB each)
+  async function createIconThumbnail(file) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = 96;
+        canvas.width = size;
+        canvas.height = size;
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width - min) / 2;
+        const sy = (img.height - min) / 2;
+        canvas.getContext('2d').drawImage(img, sx, sy, min, min, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function runAnalysis(pending) {
     if (!pending || !projectId) return;
     setBusy(true);
@@ -157,13 +180,14 @@ export default function ProjectPage() {
       const formData = new FormData();
       formData.append('photo', pending.file);
       formData.append('model', project?.model || 'openai');
-      const [res, thumbnail] = await Promise.all([
+      const [res, thumbnail, iconThumbnail] = await Promise.all([
         fetch('/api/analyze-photo', { method: 'POST', body: formData }),
         !project?.thumbnail ? createThumbnail(pending.file) : Promise.resolve(null),
+        createIconThumbnail(pending.file),
       ]);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Analysis failed');
-      addPhotoResult(projectId, pending.id, data, thumbnail);
+      addPhotoResult(projectId, pending.id, data, thumbnail, iconThumbnail);
       setPendingPhoto(null);
     } catch (err) {
       setAnalysisError(err?.message || 'Analysis failed');
@@ -303,7 +327,11 @@ export default function ProjectPage() {
                   {/* Rows */}
                   <div>
                     {items.map((repair, i) => (
-                      <RepairRow key={`${repair.photoId}-${i}`} repair={repair} />
+                      <RepairRow
+                        key={`${repair.photoId}-${i}`}
+                        repair={repair}
+                        photoIcon={project?.photos?.find(p => p.id === repair.photoId)?.icon || null}
+                      />
                     ))}
                   </div>
                 </div>
