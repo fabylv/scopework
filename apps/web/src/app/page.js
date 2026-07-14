@@ -140,15 +140,15 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black text-[#171C24] leading-tight tracking-tight mb-5">
-            Turn property photos into repair estimates{' '}
+            Know exactly what repairs cost —{' '}
             <span className="relative inline-block">
-              <span className="relative z-10">in minutes.</span>
+              <span className="relative z-10">before you commit.</span>
               <span className="absolute inset-x-0 bottom-1 h-3 bg-[#FFA12B]/25 -z-0 rounded" />
             </span>
           </h1>
 
           <p className="text-base sm:text-lg text-[#6E737B] leading-relaxed mb-8 max-w-md">
-            Walk a property, snap photos, and let AI identify every repair — grouped by trade with cost estimates. No clipboard. No guesswork.
+            Walk any property, snap photos, and get an AI-powered repair estimate in minutes. No clipboard. No guesswork. No contractor needed just to get a number.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -214,9 +214,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="bg-white border-y border-[#E8E6E1] py-16">
-        <div className="max-w-4xl mx-auto px-5">
+      {/* Who it's for */}
+      <section className="bg-white border-y border-[#E8E6E1] py-14">
+        <div className="max-w-5xl mx-auto px-5">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0A8] text-center mb-2">Built for anyone dealing with repairs</p>
+          <h2 className="text-2xl font-black text-[#171C24] text-center mb-10">Your situation. Your estimate.</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
+            <div className="bg-[#FAF9F6] rounded-xl border border-[#E1E2E4] p-5">
+              <div className="w-10 h-10 rounded-xl bg-[#FFF3DE] flex items-center justify-center text-xl mb-3">🏠</div>
+              <p className="font-bold text-[#171C24] mb-1">Homeowners</p>
+              <p className="text-sm text-[#6E737B] leading-relaxed">Plan your renovation or repair budget before hiring anyone.</p>
+            </div>
+            <div className="bg-[#FAF9F6] rounded-xl border border-[#E1E2E4] p-5">
+              <div className="w-10 h-10 rounded-xl bg-[#FFF3DE] flex items-center justify-center text-xl mb-3">🔑</div>
+              <p className="font-bold text-[#171C24] mb-1">Landlords</p>
+              <p className="text-sm text-[#6E737B] leading-relaxed">Document tenant damage and get repair quotes fast, from anywhere.</p>
+            </div>
+            <div className="bg-[#FAF9F6] rounded-xl border border-[#E1E2E4] p-5">
+              <div className="w-10 h-10 rounded-xl bg-[#FFF3DE] flex items-center justify-center text-xl mb-3">🏗️</div>
+              <p className="font-bold text-[#171C24] mb-1">Contractors</p>
+              <p className="text-sm text-[#6E737B] leading-relaxed">Generate a detailed scope of work straight from job site photos.</p>
+            </div>
+            <div className="bg-[#FAF9F6] rounded-xl border border-[#E1E2E4] p-5">
+              <div className="w-10 h-10 rounded-xl bg-[#FFF3DE] flex items-center justify-center text-xl mb-3">📈</div>
+              <p className="font-bold text-[#171C24] mb-1">Investors</p>
+              <p className="text-sm text-[#6E737B] leading-relaxed">Evaluate deals and estimate rehab costs before you make an offer.</p>
+            </div>
+          </div>
+
           <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0A8] text-center mb-2">How it works</p>
           <h2 className="text-2xl font-black text-[#171C24] text-center mb-10">Three steps to a full scope of work</h2>
           <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
@@ -242,7 +267,7 @@ export default function LandingPage() {
           <FeatureCard icon="💰" title="Instant estimates"
             desc="Cost ranges per repair based on severity, with contractor and materials breakdowns coming soon." />
           <FeatureCard icon="📱" title="Mobile-first"
-            desc="Designed for fieldwork. Take photos directly from your camera, no uploads needed." />
+            desc="Native iOS & Android app — take photos on-site with your camera, synced to web instantly." />
         </div>
       </section>
 
@@ -252,7 +277,7 @@ export default function LandingPage() {
           <p className="text-xs font-bold uppercase tracking-widest text-[#FFA12B] mb-3">Get started today</p>
           <h2 className="text-2xl sm:text-3xl font-black text-white mb-3">Ready to scope your first property?</h2>
           <p className="text-[#6A7280] mb-8 max-w-md mx-auto">
-            Join investors and contractors who use ScopeWork to stop guessing and start knowing.
+            Join homeowners, landlords, investors, and contractors who use ScopeWork to stop guessing and start knowing.
           </p>
           <Link
             href="/register"

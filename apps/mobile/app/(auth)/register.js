@@ -21,7 +21,7 @@ export default function RegisterScreen() {
           <Text style={styles.logoText}>ScopeWork</Text>
         </View>
         <Text style={styles.heading}>Create account</Text>
-        <Text style={styles.sub}>Start estimating repairs in minutes</Text>
+        <Text style={styles.sub}>Know exactly what repairs cost — before you commit</Text>
         <View style={styles.form}>
           <TextInput style={styles.input} placeholder="Full name" placeholderTextColor="#9AA0A8" value={name} onChangeText={setName} />
           <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#9AA0A8" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />

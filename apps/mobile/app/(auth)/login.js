@@ -22,7 +22,7 @@ export default function LoginScreen() {
           <Text style={styles.logoText}>ScopeWork</Text>
         </View>
         <Text style={styles.heading}>Sign in</Text>
-        <Text style={styles.sub}>AI-powered repair estimates for real estate pros</Text>
+        <Text style={styles.sub}>AI-powered repair estimates for anyone dealing with property repairs</Text>
 
         <View style={styles.form}>
           <TextInput
