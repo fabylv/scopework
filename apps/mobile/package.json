@@ -9,8 +9,8 @@
     "build": "expo export"
   },
   "dependencies": {
-    "@scopework/shared": "workspace:*",
-    "@scopework/api-client": "workspace:*",
+    "@scopework/shared": "*",
+    "@scopework/api-client": "*",
     "expo": "~53.0.0",
     "expo-router": "~4.0.0",
     "expo-camera": "~16.0.0",
