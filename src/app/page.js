@@ -89,9 +89,10 @@ export default function LandingPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    // Use cached session first (instant), then verify in background
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoaded(true);
     });
   }, []);

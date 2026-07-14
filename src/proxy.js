@@ -32,7 +32,11 @@ export async function proxy(request) {
 }
 
 export const config = {
+  // Only run on protected routes — skip landing, login, register, and static assets
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/dashboard/:path*',
+    '/project/:path*',
+    '/account/:path*',
+    '/contractors/:path*',
   ],
 };
