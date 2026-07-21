@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { getProjects } from '@/lib/projects';
+import { getProjects } from '@/lib/db';
 import AppShell from '@/components/AppShell';
 
 export default function AccountPage() {
@@ -32,7 +32,7 @@ export default function AccountPage() {
       setEmail(u.email || '');
       setCompany(meta.company || '');
     });
-    setProjectCount(getProjects().length);
+    getProjects().then((list) => setProjectCount(list.length)).catch(() => {});
   }, []);
 
   async function handleSave(e) {
