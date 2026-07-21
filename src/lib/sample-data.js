@@ -1,8 +1,10 @@
 /**
  * ScopeWork — Sample Projects
  * Realistic demo data for development and presentations.
- * Loaded via the dashboard empty state or the /seed page.
+ * Loaded via the dashboard empty state — seeds directly into Supabase.
  */
+
+import { createClient } from '@/lib/supabase/client';
 
 // Unsplash house photos (same set used by dashboard placeholders)
 const PHOTOS = [
@@ -175,43 +177,93 @@ const project5 = {
 export const SAMPLE_PROJECTS = [project1, project2, project3, project4, project5];
 
 /**
- * Inject sample projects into localStorage.
- * Preserves any existing non-sample projects.
+ * Seed sample projects into Supabase for the current logged-in user.
+ * Safe to call multiple times — skips if samples already exist.
  */
-export function loadSampleProjects() {
-  if (typeof window === 'undefined') return;
+export async function loadSampleProjects() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Must be logged in to load samples');
 
-  let existing = [];
-  try {
-    const raw = window.localStorage.getItem('scopework_projects');
-    if (raw) existing = JSON.parse(raw) || [];
-  } catch {
-    // ignore
+  // Check if samples already exist
+  const { count } = await supabase
+    .from('projects')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('is_sample', true);
+
+  if (count > 0) return; // already seeded
+
+  for (const project of SAMPLE_PROJECTS) {
+    // Insert project
+    const { data: dbProject, error: pErr } = await supabase
+      .from('projects')
+      .insert({
+        user_id: user.id,
+        address: project.address,
+        notes: project.notes,
+        model: project.model,
+        thumbnail: project.thumbnail,
+        is_sample: true,
+        created_at: project.createdAt,
+      })
+      .select()
+      .single();
+
+    if (pErr || !dbProject) continue;
+
+    // Insert photos + their repairs
+    for (const photo of project.photos) {
+      const photoIndex = project.photos.indexOf(photo) + 1;
+
+      const { data: dbPhoto, error: phErr } = await supabase
+        .from('photos')
+        .insert({
+          project_id: dbProject.id,
+          user_id: user.id,
+          analysis_result: photo.analysisResult,
+          error: photo.error,
+          icon: photo.icon,
+          photo_index: photoIndex,
+          created_at: photo.timestamp,
+        })
+        .select()
+        .single();
+
+      if (phErr || !dbPhoto) continue;
+
+      const photoRepairs = project.repairs.filter((r) => r.photoId === photo.id);
+      if (photoRepairs.length > 0) {
+        await supabase.from('repairs').insert(
+          photoRepairs.map((r) => ({
+            project_id: dbProject.id,
+            photo_id: dbPhoto.id,
+            user_id: user.id,
+            type: r.type,
+            location: r.location,
+            severity: r.severity,
+            confidence: r.confidence,
+            needs_closer_photo: r.needsCloserPhoto,
+            guidance: r.guidance,
+            photo_index: r.photoIndex,
+          }))
+        );
+      }
+    }
   }
-
-  // Keep any real (non-sample) projects
-  const realProjects = existing.filter((p) => !String(p?.id).startsWith('sample-'));
-  const merged = [...SAMPLE_PROJECTS, ...realProjects];
-
-  window.localStorage.setItem('scopework_projects', JSON.stringify(merged));
-  window.dispatchEvent(new Event('scopework-projects-changed'));
 }
 
 /**
- * Remove all sample projects from localStorage.
+ * Delete all sample projects for the current user.
  */
-export function clearSampleProjects() {
-  if (typeof window === 'undefined') return;
+export async function clearSampleProjects() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-  let existing = [];
-  try {
-    const raw = window.localStorage.getItem('scopework_projects');
-    if (raw) existing = JSON.parse(raw) || [];
-  } catch {
-    // ignore
-  }
-
-  const realProjects = existing.filter((p) => !String(p?.id).startsWith('sample-'));
-  window.localStorage.setItem('scopework_projects', JSON.stringify(realProjects));
-  window.dispatchEvent(new Event('scopework-projects-changed'));
+  await supabase
+    .from('projects')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('is_sample', true);
 }

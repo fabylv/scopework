@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getProjects } from '@/lib/projects';
+import { getProjects } from '@/lib/db';
 import { loadSampleProjects, clearSampleProjects } from '@/lib/sample-data';
 import AppShell from '@/components/AppShell';
 
@@ -123,18 +123,47 @@ function ProjectCard({ project }) {
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState([]);
+  const [seeding, setSeeding] = useState(false);
+
+  async function handleLoadSamples() {
+    setSeeding(true);
+    try {
+      await loadSampleProjects();
+      const data = await getProjects();
+      setProjects(data);
+    } catch (err) {
+      console.error('Seed failed', err);
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  async function handleClearSamples() {
+    try {
+      await clearSampleProjects();
+      const data = await getProjects();
+      setProjects(data);
+    } catch (err) {
+      console.error('Clear samples failed', err);
+    }
+  }
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    function refresh() { setProjects(getProjects()); }
+    async function refresh() {
+      try {
+        const data = await getProjects();
+        setProjects(data);
+      } catch (err) {
+        console.error('Failed to load projects', err);
+      } finally {
+        setLoading(false);
+      }
+    }
     refresh();
-    window.addEventListener('storage', refresh);
     window.addEventListener('focus', refresh);
-    window.addEventListener('scopework-projects-changed', refresh);
-    return () => {
-      window.removeEventListener('storage', refresh);
-      window.removeEventListener('focus', refresh);
-      window.removeEventListener('scopework-projects-changed', refresh);
-    };
+    return () => window.removeEventListener('focus', refresh);
   }, []);
 
   return (
@@ -179,10 +208,11 @@ export default function DashboardPage() {
               Or try the photo analyzer →
             </Link>
             <button
-              onClick={loadSampleProjects}
-              className="mt-6 text-xs text-[#9AA0A8] hover:text-[#6E737B] underline underline-offset-2 transition-colors"
+              onClick={handleLoadSamples}
+              disabled={seeding}
+              className="mt-6 text-xs text-[#9AA0A8] hover:text-[#6E737B] underline underline-offset-2 transition-colors disabled:opacity-50"
             >
-              Load sample projects
+              {seeding ? 'Loading samples...' : 'Load sample projects'}
             </button>
           </div>
         ) : (
@@ -193,7 +223,7 @@ export default function DashboardPage() {
             {projects.some((p) => p.id.startsWith('sample-')) && (
               <div className="mt-6 flex justify-center">
                 <button
-                  onClick={clearSampleProjects}
+                  onClick={handleClearSamples}
                   className="text-xs text-[#C5CAD4] hover:text-[#9AA0A8] underline underline-offset-2 transition-colors"
                 >
                   Clear sample projects

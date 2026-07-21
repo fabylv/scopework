@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { createProject } from '@/lib/projects';
+import { createProject } from '@/lib/db';
 import AppShell from '@/components/AppShell';
 
 const MODEL_OPTIONS = [
@@ -20,13 +20,13 @@ export default function NewProjectPage() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!address.trim()) { setError('Property address is required.'); return; }
     setSaving(true);
     setError('');
     try {
-      const project = createProject({ address: address.trim(), notes: notes.trim(), model });
+      const project = await createProject({ address: address.trim(), notes: notes.trim(), model });
       router.push(`/project/${project.id}`);
     } catch (err) {
       setError(err?.message || 'Unable to create project.');

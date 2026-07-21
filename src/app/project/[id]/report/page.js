@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { getProject } from '@/lib/projects';
+import { getProject } from '@/lib/db';
 import { SEVERITY_BADGE, TRADE_COLORS, inferTrade, estimateCostRange, groupByTrade, countBySeverity, totalCostRange, getModelLabel } from '@/lib/repair-utils';
 import AppShell from '@/components/AppShell';
 
@@ -44,16 +44,17 @@ export default function ReportPage() {
 
   useEffect(() => {
     if (!projectId) return;
-    function refresh() { setProject(getProject(projectId)); }
+    async function refresh() {
+      try {
+        const data = await getProject(projectId);
+        setProject(data);
+      } catch (err) {
+        console.error('Failed to load report', err);
+      }
+    }
     refresh();
-    window.addEventListener('storage', refresh);
     window.addEventListener('focus', refresh);
-    window.addEventListener('scopework-projects-changed', refresh);
-    return () => {
-      window.removeEventListener('storage', refresh);
-      window.removeEventListener('focus', refresh);
-      window.removeEventListener('scopework-projects-changed', refresh);
-    };
+    return () => window.removeEventListener('focus', refresh);
   }, [projectId]);
 
   if (!project) {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRef, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { addPhotoError, addPhotoResult, getProject } from '@/lib/projects';
+import { addPhotoError, addPhotoResult, getProject } from '@/lib/db';
 import { SEVERITY_BADGE, TRADE_COLORS, inferTrade, estimateCostRange, groupByTrade, countBySeverity, totalCostRange, getModelLabel } from '@/lib/repair-utils';
 import AppShell from '@/components/AppShell';
 
@@ -46,16 +46,17 @@ export default function ProjectPage() {
 
   useEffect(() => {
     if (!projectId) return;
-    function refresh() { setProject(getProject(projectId)); }
+    async function refresh() {
+      try {
+        const data = await getProject(projectId);
+        setProject(data);
+      } catch (err) {
+        console.error('Failed to load project', err);
+      }
+    }
     refresh();
-    window.addEventListener('storage', refresh);
     window.addEventListener('focus', refresh);
-    window.addEventListener('scopework-projects-changed', refresh);
-    return () => {
-      window.removeEventListener('storage', refresh);
-      window.removeEventListener('focus', refresh);
-      window.removeEventListener('scopework-projects-changed', refresh);
-    };
+    return () => window.removeEventListener('focus', refresh);
   }, [projectId]);
 
   const repairs = Array.isArray(project?.repairs) ? project.repairs : [];
@@ -119,7 +120,8 @@ export default function ProjectPage() {
       ]);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Analysis failed');
-      addPhotoResult(projectId, pending.id, data, thumbnail, iconThumbnail);
+      const updated = await addPhotoResult(projectId, pending.id, data, thumbnail, iconThumbnail);
+      if (updated) setProject(updated);
       setPendingPhoto(null);
     } catch (err) {
       setAnalysisError(err?.message || 'Analysis failed');
@@ -144,9 +146,10 @@ export default function ProjectPage() {
     await runAnalysis(pending);
   }
 
-  function handleSkip() {
+  async function handleSkip() {
     if (!pendingPhoto || !projectId) return;
-    addPhotoError(projectId, pendingPhoto.id, analysisError || 'Skipped');
+    const updated = await addPhotoError(projectId, pendingPhoto.id, analysisError || 'Skipped');
+    if (updated) setProject(updated);
     setPendingPhoto(null);
     setAnalysisError('');
     if (fileInputRef.current) fileInputRef.current.value = '';

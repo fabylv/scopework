@@ -12,6 +12,7 @@ create table if not exists projects (
   notes       text not null default '',
   model       text not null default 'openai' check (model in ('openai', 'anthropic', 'google')),
   thumbnail   text,                        -- compressed data URL of first photo
+  is_sample   boolean not null default false, -- true for seeded demo projects
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
