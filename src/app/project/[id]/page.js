@@ -55,8 +55,6 @@ export default function ProjectPage() {
       }
     }
     refresh();
-    window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
   }, [projectId]);
 
   const repairs = Array.isArray(project?.repairs) ? project.repairs : [];

@@ -162,8 +162,6 @@ export default function DashboardPage() {
       }
     }
     refresh();
-    window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
   }, []);
 
   if (loading) {

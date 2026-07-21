@@ -53,8 +53,6 @@ export default function ReportPage() {
       }
     }
     refresh();
-    window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
   }, [projectId]);
 
   if (!project) {

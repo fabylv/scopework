@@ -21,17 +21,16 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      const u = data?.user ?? null;
-      setUser(u);
-      if (!u) router.push('/login');
-    });
+    // onAuthStateChange fires immediately with the current session —
+    // single source of truth; no need to also call getUser()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
+      setAuthReady(true);
       if (!u) router.push('/login');
     });
     return () => subscription.unsubscribe();
@@ -40,8 +39,16 @@ export default function AppShell({ children }) {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+    // onAuthStateChange will fire with null session and redirect to /login
+  }
+
+  // Don't render protected content until auth state is known
+  if (!authReady) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#FFA12B] border-t-transparent animate-spin" />
+      </div>
+    );
   }
 
   return (
