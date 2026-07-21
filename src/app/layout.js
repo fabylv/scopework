@@ -1,10 +1,6 @@
-import { Geist } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
 
 export const metadata = {
   title: 'ScopeWork',
@@ -29,7 +25,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${GeistSans.variable} h-full antialiased`}>
       <head>
         {/* Apple PWA icons */}
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />

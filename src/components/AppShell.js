@@ -25,14 +25,22 @@ export default function AppShell({ children }) {
 
   useEffect(() => {
     const supabase = createClient();
-    // onAuthStateChange fires immediately with the current session —
-    // single source of truth; no need to also call getUser()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    // getSession() reads from localStorage — instant, no network call
+    supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
       setAuthReady(true);
       if (!u) router.push('/login');
     });
+
+    // onAuthStateChange handles sign-in / sign-out / token refresh after initial load
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null;
+      setUser(u);
+      if (!u) router.push('/login');
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
