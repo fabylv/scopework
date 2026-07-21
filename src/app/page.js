@@ -268,7 +268,7 @@ export default function LandingPage() {
           <FeatureCard icon="💰" title="Instant estimates"
             desc="Cost ranges per repair based on severity, with contractor and materials breakdowns coming soon." />
           <FeatureCard icon="📱" title="Mobile-first"
-            desc="Native iOS & Android app — take photos on-site with your camera, synced to web instantly." />
+            desc="Optimized for your phone — take photos on-site with your camera and get results instantly." />
         </div>
       </section>
 
