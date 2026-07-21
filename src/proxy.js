@@ -2,10 +2,10 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
 /**
- * Middleware — refreshes Supabase session tokens on every protected request.
- * Required by @supabase/ssr to keep sessions alive.
+ * Supabase session refresh — called by middleware.js on every protected request.
+ * Required by @supabase/ssr to keep auth tokens alive.
  */
-export async function middleware(request) {
+export async function proxy(request) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
