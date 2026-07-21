@@ -49,7 +49,8 @@ export async function getProjects() {
   const { data, error } = await supabase
     .from('projects')
     .select('*, photos(*), repairs(*)')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .abortSignal(AbortSignal.timeout(8000));
 
   if (error) throw error;
   return (data || []).map((p) => toProjectShape(p, p.photos, p.repairs));

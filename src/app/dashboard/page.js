@@ -166,6 +166,32 @@ export default function DashboardPage() {
     return () => window.removeEventListener('focus', refresh);
   }, []);
 
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-6xl">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div className="h-8 w-32 bg-[#E1E2E4] rounded-lg animate-pulse" />
+            <div className="hidden md:block h-9 w-32 bg-[#E1E2E4] rounded-lg animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-[#E1E2E4] overflow-hidden">
+                <div className="w-full h-44 bg-[#E1E2E4] animate-pulse" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 w-3/4 bg-[#E1E2E4] rounded animate-pulse" />
+                  <div className="h-3 w-1/2 bg-[#E1E2E4] rounded animate-pulse" />
+                  <div className="h-px bg-[#F0F1F3]" />
+                  <div className="h-5 w-1/3 bg-[#E1E2E4] rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="px-4 sm:px-6 py-5 sm:py-8 max-w-6xl">
