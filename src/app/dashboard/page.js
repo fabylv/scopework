@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getProjects } from '@/lib/projects';
+import { loadSampleProjects, clearSampleProjects } from '@/lib/sample-data';
 import AppShell from '@/components/AppShell';
 
 function formatDate(value) {
@@ -177,11 +178,29 @@ export default function DashboardPage() {
             <Link href="/test-photo" className="mt-3 text-xs text-[#9AA0A8] hover:text-[#6E737B]">
               Or try the photo analyzer →
             </Link>
+            <button
+              onClick={loadSampleProjects}
+              className="mt-6 text-xs text-[#9AA0A8] hover:text-[#6E737B] underline underline-offset-2 transition-colors"
+            >
+              Load sample projects
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
+            </div>
+            {projects.some((p) => p.id.startsWith('sample-')) && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={clearSampleProjects}
+                  className="text-xs text-[#C5CAD4] hover:text-[#9AA0A8] underline underline-offset-2 transition-colors"
+                >
+                  Clear sample projects
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </AppShell>
