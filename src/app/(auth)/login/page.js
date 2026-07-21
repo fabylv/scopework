@@ -10,6 +10,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError('Enter your email above, then click Forgot password.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+    } else {
+      setForgotSent(true);
+    }
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -104,8 +124,13 @@ export default function LoginPage() {
               <label className="block text-xs font-bold uppercase tracking-widest text-[#9AA0A8]">
                 Password
               </label>
-              <button type="button" className="text-xs text-[#FFA12B] hover:underline font-medium">
-                Forgot password?
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-xs text-[#FFA12B] hover:underline font-medium disabled:opacity-50"
+                disabled={loading}
+              >
+                {forgotSent ? '✓ Reset email sent' : 'Forgot password?'}
               </button>
             </div>
             <input
@@ -136,7 +161,7 @@ export default function LoginPage() {
       </div>
 
       <p className="text-center text-sm text-[#6E737B] mt-5">
-        Don't have an account?{' '}
+        Don&apos;t have an account?{' '}
         <Link href="/register" className="text-[#FFA12B] font-semibold hover:underline">
           Create one
         </Link>

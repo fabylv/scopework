@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getProject } from '@/lib/db';
-import { SEVERITY_BADGE, TRADE_COLORS, inferTrade, estimateCostRange, groupByTrade, countBySeverity, totalCostRange, getModelLabel } from '@/lib/repair-utils';
+import { SEVERITY_BADGE, TRADE_COLORS, estimateCostRange, groupByTrade, countBySeverity, totalCostRange, getModelLabel } from '@/lib/repair-utils';
 import AppShell from '@/components/AppShell';
 
 function formatDate(value) {
@@ -18,6 +18,7 @@ function RepairRow({ repair, photoIcon }) {
     <div className="flex items-center gap-3 py-3 px-4 border-b border-[#F0F1F3] last:border-0">
       <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500">
         {photoIcon
+          // eslint-disable-next-line @next/next/no-img-element
           ? <img src={photoIcon} alt="" className="w-full h-full object-cover" />
           : <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         }
@@ -41,6 +42,17 @@ export default function ReportPage() {
   const params = useParams();
   const projectId = params?.id;
   const [project, setProject] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard not available — silently ignore
+    }
+  }
 
   useEffect(() => {
     if (!projectId) return;
@@ -112,18 +124,18 @@ export default function ReportPage() {
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#2A323C]">
             <button
-              onClick={() => console.log('Export PDF', projectId)}
+              onClick={() => window.print()}
               className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors"
             >
               <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export PDF
             </button>
             <button
-              onClick={() => console.log('Share', projectId)}
+              onClick={handleShare}
               className="flex items-center gap-1.5 rounded-lg bg-[#2A323C] px-3 py-2 text-xs font-semibold text-[#C5CAD4] hover:bg-[#333D49] transition-colors"
             >
               <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Share Link
+              {copied ? '✓ Copied!' : 'Share Link'}
             </button>
           </div>
         </div>

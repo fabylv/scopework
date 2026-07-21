@@ -35,11 +35,4 @@ export async function proxy(request) {
   return supabaseResponse;
 }
 
-export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/project/:path*',
-    '/account/:path*',
-    '/contractors/:path*',
-  ],
-};
+

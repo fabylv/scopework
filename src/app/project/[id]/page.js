@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRef, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { addPhotoError, addPhotoResult, getProject } from '@/lib/db';
-import { SEVERITY_BADGE, TRADE_COLORS, inferTrade, estimateCostRange, groupByTrade, countBySeverity, totalCostRange, getModelLabel } from '@/lib/repair-utils';
+import { SEVERITY_BADGE, TRADE_COLORS, estimateCostRange, groupByTrade, countBySeverity, totalCostRange, getModelLabel } from '@/lib/repair-utils';
 import AppShell from '@/components/AppShell';
 
 const SEVERITY_ORDER = ['major', 'moderate', 'minor'];
@@ -16,6 +16,7 @@ function RepairRow({ repair, photoIcon }) {
     <div className="flex items-center gap-3 py-3 px-4 border-b border-[#F0F1F3] last:border-0">
       <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500">
         {photoIcon
+          // eslint-disable-next-line @next/next/no-img-element
           ? <img src={photoIcon} alt="" className="w-full h-full object-cover" />
           : <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         }
@@ -235,7 +236,7 @@ export default function ProjectPage() {
           <div className="bg-white rounded-xl border border-[#E1E2E4] border-dashed p-8 text-center" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
             <div className="text-4xl mb-3">📷</div>
             <p className="font-bold text-[#171C24]">No repairs yet</p>
-            <p className="text-sm text-[#6E737B] mt-1">Tap "Add Photo" to start capturing.</p>
+            <p className="text-sm text-[#6E737B] mt-1">Tap &ldquo;Add Photo&rdquo; to start capturing.</p>
           </div>
         ) : (
           <div className="space-y-4">

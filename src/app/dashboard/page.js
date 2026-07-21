@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { getProjects } from '@/lib/db';
 import { loadSampleProjects, clearSampleProjects } from '@/lib/sample-data';
@@ -24,20 +25,6 @@ function estimateRange(repairs = []) {
   const high = c.major * 5000 + c.moderate * 1800 + c.minor * 500;
   if (low === 0 && high === 0) return null;
   return [`$${low.toLocaleString()}`, `$${high.toLocaleString()}`];
-}
-
-// Gradient placeholder by project id
-const GRADIENTS = [
-  'from-slate-600 to-slate-800',
-  'from-stone-500 to-stone-700',
-  'from-zinc-600 to-zinc-800',
-  'from-neutral-500 to-neutral-700',
-  'from-slate-500 to-slate-700',
-];
-
-function projectGradient(id = '') {
-  const n = id.charCodeAt(0) % GRADIENTS.length;
-  return GRADIENTS[n];
 }
 
 const SAMPLE_PHOTOS = [
@@ -69,10 +56,12 @@ function ProjectCard({ project }) {
     >
       {/* Photo / placeholder */}
       <div className="relative w-full h-44 overflow-hidden bg-stone-200">
-        <img
+        <Image
           src={project.thumbnail || samplePhoto(project.id)}
           alt={project.address}
-          className="w-full h-full object-cover"
+          fill
+          unoptimized
+          className="object-cover"
         />
         {/* Overlay for readability */}
         {project.thumbnail && <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />}
@@ -124,6 +113,7 @@ function ProjectCard({ project }) {
 export default function DashboardPage() {
   const [projects, setProjects] = useState([]);
   const [seeding, setSeeding] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   async function handleLoadSamples() {
     setSeeding(true);
@@ -147,8 +137,6 @@ export default function DashboardPage() {
       console.error('Clear samples failed', err);
     }
   }
-
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function refresh() {

@@ -42,7 +42,7 @@ export default function AppShell({ children }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [router]);
 
   async function handleSignOut() {
     const supabase = createClient();
