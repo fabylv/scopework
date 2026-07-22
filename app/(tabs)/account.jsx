@@ -48,8 +48,9 @@ export default function AccountScreen() {
     if (!signingOut) return;
     supabase.auth.signOut().finally(() => {
       if (Platform.OS === "web") {
-        // Hard redirect on web — most reliable way to clear session state
-        window.location.href = "/";
+        // Clear all stored auth data then hard redirect
+        try { localStorage.clear(); } catch (_) {}
+        window.location.replace(window.location.origin);
       } else {
         router.replace("/(auth)/login");
       }
