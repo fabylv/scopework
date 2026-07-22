@@ -33,6 +33,19 @@ const CATEGORY_META = {
   Other:     { icon: "👷", color: "#64748B" },
 };
 
+/** Capitalize first letter of each word */
+function toTitleCase(str) {
+  return str.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Normalize phone to XXX-XXX-XXXX */
+function formatPhone(raw) {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+}
+
 const TRADES = ["General", "Plumber", "Electrician", "HVAC", "Roofer", "Painter", "Flooring", "Inspector", "Landscaping", "Supplies", "Other"];
 const CATEGORIES = ["Suppliers", "Specialty", "Other"];
 
@@ -180,7 +193,7 @@ export default function ContractorsScreen() {
     if (!name.trim()) return;
     try {
       await createContractor.mutateAsync({
-        name: name.trim(),
+        name: toTitleCase(name),
         trade,
         category,
         phone: phone.trim() || null,
@@ -314,7 +327,7 @@ export default function ContractorsScreen() {
               <View style={{ gap: 6 }}>
                 <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>Phone</Text>
                 <TextInput
-                  value={phone} onChangeText={setPhone}
+                  value={phone} onChangeText={(v) => setPhone(formatPhone(v))}
                   placeholder="555-000-1234" keyboardType="phone-pad"
                   placeholderTextColor="rgba(255,255,255,0.25)"
                   style={{ backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, color: "#fff", fontSize: 16 }}
