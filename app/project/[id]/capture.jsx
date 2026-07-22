@@ -295,18 +295,32 @@ export default function CaptureScreen() {
       input.accept = "image/*";
       if (multiple) input.multiple = true;
       if (capture) input.capture = "environment";
-      input.onchange = (e) => resolve(Array.from(e.target.files ?? []));
-      input.oncancel = () => resolve([]);
+      // Must be in DOM for mobile Chrome to open the picker
+      input.style.cssText = "position:fixed;top:-200px;left:-200px;opacity:0;";
+      document.body.appendChild(input);
+      input.onchange = (e) => {
+        document.body.removeChild(input);
+        resolve(Array.from(e.target.files ?? []));
+      };
+      // Fallback: if focus returns without a file, resolve empty
+      input.addEventListener("cancel", () => {
+        document.body.removeChild(input);
+        resolve([]);
+      });
       input.click();
     });
   }
 
   async function handlePicker() {
     if (Platform.OS === "web") {
-      const files = await openWebFilePicker({ multiple: true });
-      for (const file of files) {
-        const uri = await readFileAsDataURL(file);
-        await processAsset({ uri, fileName: file.name, mimeType: file.type });
+      try {
+        const files = await openWebFilePicker({ multiple: true });
+        for (const file of files) {
+          const uri = await readFileAsDataURL(file);
+          await processAsset({ uri, fileName: file.name, mimeType: file.type });
+        }
+      } catch (e) {
+        Alert.alert("Error", "Could not load photo: " + (e?.message ?? String(e)));
       }
       return;
     }
@@ -326,10 +340,14 @@ export default function CaptureScreen() {
   }
 
   async function handleWebCamera() {
-    const files = await openWebFilePicker({ capture: true });
-    if (files[0]) {
-      const uri = await readFileAsDataURL(files[0]);
-      await processAsset({ uri, fileName: files[0].name, mimeType: files[0].type });
+    try {
+      const files = await openWebFilePicker({ capture: true });
+      if (files[0]) {
+        const uri = await readFileAsDataURL(files[0]);
+        await processAsset({ uri, fileName: files[0].name, mimeType: files[0].type });
+      }
+    } catch (e) {
+      Alert.alert("Error", "Could not open camera: " + (e?.message ?? String(e)));
     }
   }
 
