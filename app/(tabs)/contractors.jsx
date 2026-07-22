@@ -21,7 +21,7 @@ import {
 
 const TRADE_ICON = {
   Plumber: "🔧", Electrician: "⚡", HVAC: "❄️", Roofer: "🏠",
-  Painter: "🎨", General: "🏗️", Flooring: "🪵", Other: "👷",
+  Painter: "🎨", General: "🏗️", Flooring: "🪵", Supplies: "🏪", Other: "👷",
 };
 
 function ContractorCard({ contractor, onDelete }) {
@@ -59,7 +59,7 @@ function ContractorCard({ contractor, onDelete }) {
   );
 }
 
-const TRADES = ["General", "Plumber", "Electrician", "HVAC", "Roofer", "Painter", "Flooring", "Other"];
+const TRADES = ["General", "Plumber", "Electrician", "HVAC", "Roofer", "Painter", "Flooring", "Supplies", "Other"];
 
 export default function ContractorsScreen() {
   const { data: contractors = [], isLoading } = useContractors();
