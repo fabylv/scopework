@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isMockMode, MOCK_CONTRACTORS } from "../lib/mockData";
 import {
   createContractor,
   deleteContractor,
@@ -10,6 +11,7 @@ export function useContractors() {
   return useQuery({
     queryKey: ["contractors"],
     queryFn: async () => {
+      if (isMockMode()) return MOCK_CONTRACTORS;
       const { data, error } = await getContractors();
       if (error) throw error;
       return data;

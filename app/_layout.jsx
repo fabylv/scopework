@@ -5,6 +5,7 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
+import { isMockMode } from "../lib/mockData";
 import { supabase } from "../lib/supabase";
 
 const queryClient = new QueryClient({
@@ -24,6 +25,12 @@ function AuthGuard() {
   const [session, setSession] = useState(undefined); // undefined = loading
 
   useEffect(() => {
+    // In mock mode, skip auth entirely and go straight to the app
+    if (isMockMode()) {
+      setSession("mock");
+      return;
+    }
+
     // Hydrate session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -45,10 +52,10 @@ function AuthGuard() {
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!session && !inAuthGroup) {
-      // Not signed in → push to login
       router.replace("/(auth)/login");
     } else if (session && inAuthGroup) {
-      // Signed in but on auth screen → push to app
+      router.replace("/(tabs)/dashboard");
+    } else if (session && !segments.length) {
       router.replace("/(tabs)/dashboard");
     }
   }, [session, segments]);
