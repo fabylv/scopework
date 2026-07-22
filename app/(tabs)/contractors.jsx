@@ -13,6 +13,17 @@ import {
   View,
 } from "react-native";
 
+function confirmDelete(name, onConfirm) {
+  if (Platform.OS === "web") {
+    if (window.confirm(`Remove ${name}?`)) onConfirm();
+    return;
+  }
+  Alert.alert("Remove", `Remove ${name}?`, [
+    { text: "Cancel", style: "cancel" },
+    { text: "Remove", style: "destructive", onPress: onConfirm },
+  ]);
+}
+
 import {
   useContractors,
   useCreateContractor,
@@ -136,12 +147,7 @@ function ContractorCard({ contractor, onDelete }) {
         ) : null}
       </View>
       <TouchableOpacity
-        onPress={() =>
-          Alert.alert("Remove", `Remove ${contractor.name}?`, [
-            { text: "Cancel", style: "cancel" },
-            { text: "Remove", style: "destructive", onPress: () => onDelete(contractor.id) },
-          ])
-        }
+        onPress={() => confirmDelete(contractor.name, () => onDelete(contractor.id))}
         className="w-8 h-8 items-center justify-center"
       >
         <Text style={{ color: "#EF4444", fontSize: 16 }}>✕</Text>
