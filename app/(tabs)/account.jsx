@@ -1,8 +1,10 @@
 import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+import { isMockMode } from "../../lib/mockData";
 import { shadows } from "../../lib/shadow";
 import { supabase } from "../../lib/supabase";
 
@@ -28,45 +30,46 @@ function Row({ icon, label, sublabel, onPress, danger }) {
 }
 
 export default function AccountScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState(null);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
 
   useEffect(() => {
+    if (isMockMode()) return; // no real user in mock mode
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
 
-  async function handleChangeEmail() {
-    if (Platform.OS === "ios") {
-      Alert.prompt(
-        "Update Email",
-        "Enter your new email address:",
-        async (newEmail) => {
-          if (!newEmail?.trim()) return;
-          const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
-          if (error) {
-            Alert.alert("Error", error.message);
-          } else {
-            Alert.alert("Check your inbox", "A confirmation link has been sent to your new email address.");
-          }
-        },
-        "plain-text",
-        email ?? ""
-      );
+  function handleChangeEmail() {
+    setNewEmail(email ?? "");
+    setEditingEmail(true);
+  }
+
+  async function saveNewEmail() {
+    const trimmed = newEmail.trim();
+    if (!trimmed || trimmed === email) { setEditingEmail(false); return; }
+    setEmailSaving(true);
+    const { error } = await supabase.auth.updateUser({ email: trimmed });
+    setEmailSaving(false);
+    if (error) {
+      Alert.alert("Error", error.message);
     } else {
-      Alert.alert(
-        "Update Email",
-        "To change your email, contact us at support@repairiq.app",
-        [{ text: "Email Support", onPress: () => Linking.openURL("mailto:support@repairiq.app") }, { text: "Cancel", style: "cancel" }]
-      );
+      setEditingEmail(false);
+      Alert.alert("Check your inbox", "A confirmation link was sent to your new address. Your email will update once confirmed.");
     }
   }
 
   async function handleChangePassword() {
-    if (!email) return;
+    if (!email) {
+      Alert.alert("Not available", "Could not load your email address. Please restart the app and try again.");
+      return;
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
       Alert.alert("Error", error.message);
     } else {
-      Alert.alert("Password reset sent", `Check your inbox at ${email} for a reset link.`);
+      Alert.alert("Reset email sent ✓", `Check your inbox at ${email} for a password reset link.`);
     }
   }
 
@@ -81,7 +84,15 @@ export default function AccountScreen() {
   async function handleSignOut() {
     Alert.alert("Sign Out", "You'll need to sign in again to access your projects.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: () => supabase.auth.signOut() },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await supabase.auth.signOut();
+          // Force navigation in case onAuthStateChange doesn't fire (e.g. mock mode)
+          router.replace("/(auth)/login");
+        },
+      },
     ]);
   }
 
@@ -106,7 +117,34 @@ export default function AccountScreen() {
         <Text className="text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 ml-1">
           Account
         </Text>
-        <Row icon="📧" label="Email" sublabel={email ?? "Loading…"} onPress={handleChangeEmail} />
+        <Row icon="📧" label="Email" sublabel={email ?? (isMockMode() ? "Demo mode" : "Loading…")} onPress={handleChangeEmail} />
+
+        {/* Inline email editor — cross-platform TextInput approach */}
+        {editingEmail && (
+          <View className="bg-white rounded-2xl px-5 py-4 mb-2.5" style={shadows.sm}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: "#64748B", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>New email address</Text>
+            <TextInput
+              value={newEmail}
+              onChangeText={setNewEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoFocus
+              placeholder="you@example.com"
+              placeholderTextColor="#9CA3AF"
+              style={{ fontSize: 15, color: "#1A1F2E", borderBottomWidth: 1, borderBottomColor: "#FFA12B", paddingBottom: 6, marginBottom: 14 }}
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity onPress={() => setEditingEmail(false)}
+                style={{ flex: 1, borderRadius: 12, borderWidth: 1, borderColor: "#E2E8F0", paddingVertical: 10, alignItems: "center" }}>
+                <Text style={{ color: "#64748B", fontWeight: "600", fontSize: 14 }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={saveNewEmail} disabled={emailSaving}
+                style={{ flex: 2, borderRadius: 12, backgroundColor: "#FFA12B", paddingVertical: 10, alignItems: "center", opacity: emailSaving ? 0.6 : 1 }}>
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>{emailSaving ? "Saving…" : "Save Email"}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
         <Row icon="🔒" label="Change Password" sublabel="Update your password" onPress={handleChangePassword} />
 
         <Text className="text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 ml-1 mt-5">
