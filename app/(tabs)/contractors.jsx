@@ -34,20 +34,72 @@ const CATEGORY_META = {
 };
 
 const TRADES = ["General", "Plumber", "Electrician", "HVAC", "Roofer", "Painter", "Flooring", "Inspector", "Landscaping", "Supplies", "Other"];
-const CATEGORIES = ["Trades", "Suppliers", "Specialty", "Other"];
+const CATEGORIES = ["Suppliers", "Specialty", "Other"];
 
-/** Group a flat contractors array into SectionList sections. */
-function groupByCategory(contractors = []) {
-  const map = {};
+// Human-readable plural display names for each trade
+const TRADE_DISPLAY = {
+  General: "General Contractors",
+  Plumber: "Plumbers",
+  Electrician: "Electricians",
+  HVAC: "HVAC",
+  Roofer: "Roofers",
+  Painter: "Painters",
+  Flooring: "Flooring",
+  Inspector: "Inspectors",
+  Landscaping: "Landscaping",
+  Supplies: "Supplies",
+  Other: "Other",
+};
+
+/**
+ * Group contractors into SectionList sections:
+ * - Trades → one section per trade type (Plumbers, Roofers, etc.)
+ * - Suppliers / Specialty / Other → one section per category
+ */
+function groupContractors(contractors = []) {
+  const tradeMap = {};
+  const categoryMap = {};
+
   for (const c of contractors) {
-    const cat = c.category ?? "Other";
-    if (!map[cat]) map[cat] = [];
-    map[cat].push(c);
+    if (c.category === "Trades") {
+      const trade = c.trade ?? "Other";
+      if (!tradeMap[trade]) tradeMap[trade] = [];
+      tradeMap[trade].push(c);
+    } else {
+      const cat = c.category ?? "Other";
+      if (!categoryMap[cat]) categoryMap[cat] = [];
+      categoryMap[cat].push(c);
+    }
   }
-  // Return in a fixed order
-  return CATEGORIES
-    .filter((cat) => map[cat]?.length > 0)
-    .map((cat) => ({ title: cat, data: map[cat] }));
+
+  const sections = [];
+
+  // Trade sections in a sensible order
+  for (const trade of TRADES) {
+    if (tradeMap[trade]?.length) {
+      sections.push({ title: trade, display: TRADE_DISPLAY[trade] ?? trade, data: tradeMap[trade], kind: "trade" });
+    }
+  }
+  // Any trade types not in the preset order
+  for (const trade of Object.keys(tradeMap)) {
+    if (!TRADES.includes(trade) && tradeMap[trade]?.length) {
+      sections.push({ title: trade, display: trade, data: tradeMap[trade], kind: "trade" });
+    }
+  }
+
+  // Non-trade category sections
+  for (const cat of CATEGORIES) {
+    if (categoryMap[cat]?.length) {
+      sections.push({ title: cat, display: cat, data: categoryMap[cat], kind: "category" });
+    }
+  }
+  for (const cat of Object.keys(categoryMap)) {
+    if (!CATEGORIES.includes(cat) && categoryMap[cat]?.length) {
+      sections.push({ title: cat, display: cat, data: categoryMap[cat], kind: "category" });
+    }
+  }
+
+  return sections;
 }
 
 function ContractorCard({ contractor, onDelete }) {
@@ -85,21 +137,26 @@ function ContractorCard({ contractor, onDelete }) {
   );
 }
 
-function SectionHeader({ title }) {
+function SectionHeader({ title, display, kind }) {
+  if (kind === "trade") {
+    const icon = TRADE_ICON[title] ?? "👷";
+    return (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 16, paddingBottom: 8, backgroundColor: "#F8F7F4" }}>
+        <Text style={{ fontSize: 14 }}>{icon}</Text>
+        <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1.2, color: "#64748B" }}>
+          {display}
+        </Text>
+      </View>
+    );
+  }
   const meta = CATEGORY_META[title] ?? CATEGORY_META.Other;
   return (
-    <View
-      className="flex-row items-center gap-2 px-0 pt-5 pb-2"
-      style={{ backgroundColor: "#F8F7F4" }}
-    >
-      <View
-        className="w-6 h-6 rounded-lg items-center justify-center"
-        style={{ backgroundColor: meta.color + "22" }}
-      >
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 20, paddingBottom: 8, backgroundColor: "#F8F7F4", borderTopWidth: 1, borderTopColor: "#E2E8F0", marginTop: 4 }}>
+      <View style={{ width: 24, height: 24, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: meta.color + "22" }}>
         <Text style={{ fontSize: 12 }}>{meta.icon}</Text>
       </View>
       <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1.2, color: meta.color }}>
-        {title}
+        {display}
       </Text>
     </View>
   );
@@ -116,7 +173,7 @@ export default function ContractorsScreen() {
   const [category, setCategory] = useState("Trades");
   const [phone, setPhone] = useState("");
 
-  const sections = groupByCategory(contractors);
+  const sections = groupContractors(contractors);
   const totalCount = contractors.length;
 
   async function handleCreate() {
@@ -171,7 +228,7 @@ export default function ContractorsScreen() {
           <SectionList
             sections={sections}
             keyExtractor={(item) => item.id}
-            renderSectionHeader={({ section }) => <SectionHeader title={section.title} />}
+            renderSectionHeader={({ section }) => <SectionHeader title={section.title} display={section.display} kind={section.kind} />}
             renderItem={({ item }) => (
               <ContractorCard contractor={item} onDelete={(id) => deleteContractor.mutate(id)} />
             )}
