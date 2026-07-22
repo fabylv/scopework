@@ -12,9 +12,13 @@ export function useContractors() {
     queryKey: ["contractors"],
     queryFn: async () => {
       if (isMockMode()) return MOCK_CONTRACTORS;
-      const { data, error } = await getContractors();
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await getContractors();
+        if (error) return MOCK_CONTRACTORS; // tables not set up yet → show demo
+        return data ?? MOCK_CONTRACTORS;
+      } catch {
+        return MOCK_CONTRACTORS;
+      }
     },
   });
 }

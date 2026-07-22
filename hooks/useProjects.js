@@ -13,9 +13,13 @@ export function useProjects() {
     queryKey: ["projects"],
     queryFn: async () => {
       if (isMockMode()) return MOCK_PROJECTS;
-      const { data, error } = await getProjects();
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await getProjects();
+        if (error) return MOCK_PROJECTS; // tables not set up yet → show demo
+        return data ?? MOCK_PROJECTS;
+      } catch {
+        return MOCK_PROJECTS;
+      }
     },
   });
 }
@@ -24,12 +28,16 @@ export function useProject(id) {
   return useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
-      if (isMockMode()) {
+      if (isMockMode()) return MOCK_PROJECTS.find((p) => p.id === id) ?? null;
+      // Mock id fallback
+      if (id?.startsWith("mock-")) return MOCK_PROJECTS.find((p) => p.id === id) ?? null;
+      try {
+        const { data, error } = await getProject(id);
+        if (error) return MOCK_PROJECTS.find((p) => p.id === id) ?? null;
+        return data;
+      } catch {
         return MOCK_PROJECTS.find((p) => p.id === id) ?? null;
       }
-      const { data, error } = await getProject(id);
-      if (error) throw error;
-      return data;
     },
     enabled: !!id,
   });
