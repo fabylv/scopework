@@ -7,6 +7,8 @@ import { Alert, Image, Platform, ScrollView, Text, TouchableOpacity, View } from
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
 import HeaderLogo from "../../../components/HeaderLogo";
+import { createIssues } from "../../../lib/api/issues";
+import { uploadPhoto } from "../../../lib/api/photos";
 import { shadows } from "../../../lib/shadow";
 
 // ─── Mock AI results (cycles on each photo) ──────────────────────────────────
@@ -220,18 +222,49 @@ export default function CaptureScreen() {
   }
 
   async function processAsset(asset) {
-    const id = `photo-${Date.now()}`;
-    setPhotos((p) => [{ id, uri: asset.uri, status: "analyzing", result: null }, ...p]);
+    const localId = `photo-${Date.now()}`;
+    setPhotos((p) => [{ id: localId, uri: asset.uri, status: "analyzing", result: null }, ...p]);
 
-    // Simulate AI analysis (2s delay)
-    // TODO: replace with real Supabase upload + Edge Function call
-    await new Promise((r) => setTimeout(r, 2000));
-    const result = nextMock();
+    try {
+      // 1. Mock AI analysis (replace with real AI later)
+      await new Promise((r) => setTimeout(r, 2000));
+      const result = nextMock();
 
-    setPhotos((p) => p.map((x) => x.id === id ? { ...x, status: "done", result } : x));
+      // 2. Upload photo to Supabase Storage + save record
+      try {
+        await uploadPhoto(projectId, {
+          uri: asset.uri,
+          mimeType: asset.mimeType ?? "image/jpeg",
+          fileName: asset.fileName ?? `${localId}.jpg`,
+        });
+      } catch (uploadErr) {
+        console.warn("Photo upload failed:", uploadErr.message);
+      }
 
-    if (result.quality === "good" && result.issues?.length) {
-      setAllIssues((prev) => [...prev, ...result.issues.map((i) => ({ ...i, photoId: id }))]);
+      // 3. Save detected issues to DB
+      if (result.quality === "good" && result.issues?.length) {
+        try {
+          await createIssues(result.issues.map((issue) => ({
+            project_id: projectId,
+            description: issue.description,
+            category: issue.category,
+            severity: issue.severity,
+            estimated_cost: issue.estimated_cost ?? null,
+            confidence: issue.confidence ?? null,
+          })));
+        } catch (issueErr) {
+          console.warn("Issue save failed:", issueErr.message);
+        }
+      }
+
+      // 4. Update local UI state
+      setPhotos((p) => p.map((x) => x.id === localId ? { ...x, status: "done", result } : x));
+      if (result.quality === "good" && result.issues?.length) {
+        setAllIssues((prev) => [...prev, ...result.issues.map((i) => ({ ...i, photoId: localId }))]);
+      }
+    } catch (e) {
+      console.warn("processAsset error:", e.message);
+      setPhotos((p) => p.map((x) => x.id === localId ? { ...x, status: "error", result: null } : x));
     }
   }
 
