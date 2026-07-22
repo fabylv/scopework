@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
+import BottomNav from "../../../components/BottomNav";
 import { shadows } from "../../../lib/shadow";
 
 // ─── Mock AI results (cycles on each photo) ──────────────────────────────────
@@ -284,7 +285,7 @@ export default function CaptureScreen() {
         </Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom:60 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom:20 }}>
         <EstimateBar issues={allIssues} />
 
         <View style={{ paddingHorizontal:16 }}>
@@ -305,6 +306,8 @@ export default function CaptureScreen() {
           )}
         </View>
       </ScrollView>
+
+      <BottomNav />
     </View>
   );
 }

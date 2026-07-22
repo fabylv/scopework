@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import BottomNav from "../../../components/BottomNav";
 import IssueRow from "../../../components/IssueRow";
 import { useProject } from "../../../hooks/useProjects";
 import { updateIssue } from "../../../lib/api/issues";
@@ -157,6 +158,8 @@ export default function ProjectDetailScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <BottomNav />
     </View>
   );
 }
