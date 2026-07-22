@@ -1,6 +1,11 @@
 -- RepairIQ — initial schema
 -- Run this once in the Supabase SQL Editor to create all required tables.
 
+-- ─── Role grants ─────────────────────────────────────────────────────────────
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete
+  on all tables in schema public to authenticated;
+
 -- ─── Projects ────────────────────────────────────────────────────────────────
 create table if not exists public.projects (
   id          uuid primary key default gen_random_uuid(),
