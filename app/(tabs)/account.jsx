@@ -1,6 +1,7 @@
+import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 
 import { shadows } from "../../lib/shadow";
 import { supabase } from "../../lib/supabase";
@@ -33,6 +34,50 @@ export default function AccountScreen() {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
 
+  async function handleChangeEmail() {
+    if (Platform.OS === "ios") {
+      Alert.prompt(
+        "Update Email",
+        "Enter your new email address:",
+        async (newEmail) => {
+          if (!newEmail?.trim()) return;
+          const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+          if (error) {
+            Alert.alert("Error", error.message);
+          } else {
+            Alert.alert("Check your inbox", "A confirmation link has been sent to your new email address.");
+          }
+        },
+        "plain-text",
+        email ?? ""
+      );
+    } else {
+      Alert.alert(
+        "Update Email",
+        "To change your email, contact us at support@repairiq.app",
+        [{ text: "Email Support", onPress: () => Linking.openURL("mailto:support@repairiq.app") }, { text: "Cancel", style: "cancel" }]
+      );
+    }
+  }
+
+  async function handleChangePassword() {
+    if (!email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) {
+      Alert.alert("Error", error.message);
+    } else {
+      Alert.alert("Password reset sent", `Check your inbox at ${email} for a reset link.`);
+    }
+  }
+
+  function handleSupport() {
+    Linking.openURL("mailto:support@repairiq.app");
+  }
+
+  function handlePrivacy() {
+    Linking.openURL("https://repairiq.app/privacy");
+  }
+
   async function handleSignOut() {
     Alert.alert("Sign Out", "You'll need to sign in again to access your projects.", [
       { text: "Cancel", style: "cancel" },
@@ -61,14 +106,14 @@ export default function AccountScreen() {
         <Text className="text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 ml-1">
           Account
         </Text>
-        <Row icon="📧" label="Email" sublabel={email ?? "Loading…"} onPress={() => {}} />
-        <Row icon="🔒" label="Change Password" sublabel="Update your password" onPress={() => {}} />
+        <Row icon="📧" label="Email" sublabel={email ?? "Loading…"} onPress={handleChangeEmail} />
+        <Row icon="🔒" label="Change Password" sublabel="Update your password" onPress={handleChangePassword} />
 
         <Text className="text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 ml-1 mt-5">
           General
         </Text>
-        <Row icon="❓" label="Help & Support" onPress={() => {}} />
-        <Row icon="📜" label="Privacy Policy" onPress={() => {}} />
+        <Row icon="❓" label="Help & Support" sublabel="support@repairiq.app" onPress={handleSupport} />
+        <Row icon="📜" label="Privacy Policy" sublabel="repairiq.app/privacy" onPress={handlePrivacy} />
 
         <View className="mt-4">
           <Row icon="🚪" label="Sign Out" danger onPress={handleSignOut} />
