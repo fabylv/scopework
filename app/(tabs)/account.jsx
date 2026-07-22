@@ -43,11 +43,16 @@ export default function AccountScreen() {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
 
-  // Sign-out via effect so router.replace fires outside of Alert callback
+  // Sign-out via effect so navigation fires outside of Alert callback
   useEffect(() => {
     if (!signingOut) return;
     supabase.auth.signOut().finally(() => {
-      router.replace("/(auth)/login");
+      if (Platform.OS === "web") {
+        // Hard redirect on web — most reliable way to clear session state
+        window.location.href = "/";
+      } else {
+        router.replace("/(auth)/login");
+      }
     });
   }, [signingOut]);
 
