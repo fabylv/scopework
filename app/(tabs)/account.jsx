@@ -36,11 +36,20 @@ export default function AccountScreen() {
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
   const [pwResetSent, setPwResetSent] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (isMockMode()) return; // no real user in mock mode
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
+
+  // Sign-out via effect so router.replace fires outside of Alert callback
+  useEffect(() => {
+    if (!signingOut) return;
+    supabase.auth.signOut().finally(() => {
+      router.replace("/(auth)/login");
+    });
+  }, [signingOut]);
 
   function handleChangeEmail() {
     setNewEmail(email ?? "");
@@ -82,18 +91,10 @@ export default function AccountScreen() {
     Linking.openURL("https://repairiq.app/privacy");
   }
 
-  async function handleSignOut() {
+  function handleSignOut() {
     Alert.alert("Sign Out", "You'll need to sign in again to access your projects.", [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await supabase.auth.signOut();
-          // Force navigation in case onAuthStateChange doesn't fire (e.g. mock mode)
-          router.replace("/(auth)/login");
-        },
-      },
+      { text: "Sign Out", style: "destructive", onPress: () => setSigningOut(true) },
     ]);
   }
 

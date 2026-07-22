@@ -26,7 +26,10 @@ export function useContractors() {
 export function useCreateContractor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload) => createContractor(payload),
+    mutationFn: (payload) => {
+      if (isMockMode()) return Promise.resolve({ id: `mock-c-${Date.now()}`, ...payload });
+      return createContractor(payload);
+    },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["contractors"] }),
   });

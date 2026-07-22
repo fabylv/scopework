@@ -57,7 +57,7 @@ export default function DashboardScreen() {
   async function handleCreate() {
     if (!name.trim()) return;
     try {
-      const { data } = await createProject.mutateAsync({
+      const project = await createProject.mutateAsync({
         name: name.trim(),
         address: address.trim() || null,
         status: "draft",
@@ -65,9 +65,9 @@ export default function DashboardScreen() {
       setModalVisible(false);
       setName("");
       setAddress("");
-      if (data?.id) router.push(`/project/${data.id}`);
+      if (project?.id) router.push(`/project/${project.id}`);
     } catch (e) {
-      Alert.alert("Error", e.message ?? "Could not create project.");
+      Alert.alert("Error", e?.message ?? "Could not create project. Make sure the database tables are set up in Supabase.");
     }
   }
 

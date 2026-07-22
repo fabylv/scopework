@@ -48,7 +48,7 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: (payload) => {
       if (isMockMode()) {
-        return Promise.resolve({ data: { id: `mock-${Date.now()}`, ...payload }, error: null });
+        return Promise.resolve({ id: `mock-${Date.now()}`, ...payload });
       }
       return createProject(payload);
     },
