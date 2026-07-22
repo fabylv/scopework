@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { Text, TouchableOpacity, View } from "react-native";
+import { shadows } from "../lib/shadow";
 
 const STATUS = {
   complete: { label: "Complete",  dot: "#10B981", bg: "rgba(16,185,129,0.12)",  text: "#10B981" },
@@ -34,14 +35,7 @@ export default function ProjectCard({ project, onPress }) {
       onPress={onPress}
       activeOpacity={0.7}
       className="mb-3 rounded-3xl overflow-hidden"
-      style={{
-        backgroundColor: "#fff",
-        shadowColor: "#1A1F2E",
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 3,
-      }}
+      style={{ backgroundColor: "#fff", ...shadows.dark }}
     >
       {/* Top accent strip */}
       <View style={{ height: 4, backgroundColor: status.dot }} />

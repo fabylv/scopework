@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { shadow } from "../../lib/shadow";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginScreen() {
@@ -56,7 +57,7 @@ export default function LoginScreen() {
           {/* Brand mark */}
           <View className="items-center mb-12">
             <View className="w-20 h-20 rounded-3xl bg-brand-amber items-center justify-center mb-5 shadow-lg"
-              style={{ shadowColor: "#F59E0B", shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } }}>
+              style={shadow({ color: "#F59E0B", opacity: 0.4, radius: 20, y: 8 })}>
               <Text style={{ fontSize: 36 }}>🔍</Text>
             </View>
             <Text className="text-white text-4xl font-bold tracking-tight">RepairIQ</Text>

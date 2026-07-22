@@ -18,6 +18,7 @@ import {
   useCreateContractor,
   useDeleteContractor,
 } from "../../hooks/useContractors";
+import { shadows } from "../../lib/shadow";
 
 const TRADE_ICON = {
   Plumber: "🔧", Electrician: "⚡", HVAC: "❄️", Roofer: "🏠",
@@ -29,7 +30,7 @@ function ContractorCard({ contractor, onDelete }) {
   return (
     <View
       className="bg-white rounded-2xl px-5 py-4 mb-3 flex-row items-center"
-      style={{ shadowColor: "#1A1F2E", shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 3 } }}
+      style={shadows.dark}
     >
       <View
         className="w-12 h-12 rounded-2xl items-center justify-center mr-4"
@@ -126,7 +127,7 @@ export default function ContractorsScreen() {
         activeOpacity={0.9}
         style={{
           position: "absolute", bottom: 28, right: 20,
-          shadowColor: "#F59E0B", shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8,
+          ...shadows.amber,
         }}
       >
         <LinearGradient

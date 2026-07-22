@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 
+import { shadows } from "../../lib/shadow";
 import { supabase } from "../../lib/supabase";
 
 function Row({ icon, label, sublabel, onPress, danger }) {
@@ -10,7 +11,7 @@ function Row({ icon, label, sublabel, onPress, danger }) {
       onPress={onPress}
       activeOpacity={0.7}
       className="flex-row items-center gap-4 bg-white rounded-2xl px-5 py-4 mb-2.5"
-      style={{ shadowColor: "#1A1F2E", shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
+      style={shadows.sm}
     >
       <View className="w-10 h-10 rounded-xl items-center justify-center"
         style={{ backgroundColor: danger ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)" }}>

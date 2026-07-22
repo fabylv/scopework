@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import ProjectCard from "../../components/ProjectCard";
+import { shadows } from "../../lib/shadow";
 import { useCreateProject, useProjects } from "../../hooks/useProjects";
 
 function StatsBar({ projects = [] }) {
@@ -145,9 +146,7 @@ export default function DashboardScreen() {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.9}
           style={{
-            position: "absolute", bottom: 28, right: 20,
-            shadowColor: "#F59E0B", shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 4 },
-            elevation: 8,
+            position: "absolute", bottom: 28, right: 20, ...shadows.amber,
           }}
         >
           <LinearGradient
