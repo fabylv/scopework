@@ -3,10 +3,10 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  SectionList,
   Text,
   TextInput,
   TouchableOpacity,
@@ -22,21 +22,46 @@ import { shadows } from "../../lib/shadow";
 
 const TRADE_ICON = {
   Plumber: "🔧", Electrician: "⚡", HVAC: "❄️", Roofer: "🏠",
-  Painter: "🎨", General: "🏗️", Flooring: "🪵", Supplies: "🏪", Other: "👷",
+  Painter: "🎨", General: "🏗️", Flooring: "🪵", Supplies: "🏪",
+  Inspector: "🔍", Landscaping: "🌿", Other: "👷",
 };
+
+const CATEGORY_META = {
+  Trades:    { icon: "🔧", color: "#3B82F6" },
+  Suppliers: { icon: "🏪", color: "#10B981" },
+  Specialty: { icon: "🔍", color: "#8B5CF6" },
+  Other:     { icon: "👷", color: "#64748B" },
+};
+
+const TRADES = ["General", "Plumber", "Electrician", "HVAC", "Roofer", "Painter", "Flooring", "Inspector", "Landscaping", "Supplies", "Other"];
+const CATEGORIES = ["Trades", "Suppliers", "Specialty", "Other"];
+
+/** Group a flat contractors array into SectionList sections. */
+function groupByCategory(contractors = []) {
+  const map = {};
+  for (const c of contractors) {
+    const cat = c.category ?? "Other";
+    if (!map[cat]) map[cat] = [];
+    map[cat].push(c);
+  }
+  // Return in a fixed order
+  return CATEGORIES
+    .filter((cat) => map[cat]?.length > 0)
+    .map((cat) => ({ title: cat, data: map[cat] }));
+}
 
 function ContractorCard({ contractor, onDelete }) {
   const icon = TRADE_ICON[contractor.trade] ?? "👷";
   return (
     <View
-      className="bg-white rounded-2xl px-5 py-4 mb-3 flex-row items-center"
+      className="bg-white rounded-2xl px-5 py-4 mb-2.5 flex-row items-center"
       style={shadows.dark}
     >
       <View
-        className="w-12 h-12 rounded-2xl items-center justify-center mr-4"
+        className="w-11 h-11 rounded-xl items-center justify-center mr-4"
         style={{ backgroundColor: "rgba(245,158,11,0.1)" }}
       >
-        <Text style={{ fontSize: 22 }}>{icon}</Text>
+        <Text style={{ fontSize: 20 }}>{icon}</Text>
       </View>
       <View className="flex-1">
         <Text className="text-brand-dark font-bold text-base">{contractor.name}</Text>
@@ -47,20 +72,38 @@ function ContractorCard({ contractor, onDelete }) {
       </View>
       <TouchableOpacity
         onPress={() =>
-          Alert.alert("Remove Contractor", `Remove ${contractor.name}?`, [
+          Alert.alert("Remove", `Remove ${contractor.name}?`, [
             { text: "Cancel", style: "cancel" },
             { text: "Remove", style: "destructive", onPress: () => onDelete(contractor.id) },
           ])
         }
         className="w-8 h-8 items-center justify-center"
       >
-        <Text style={{ color: "#EF4444", fontSize: 17 }}>✕</Text>
+        <Text style={{ color: "#EF4444", fontSize: 16 }}>✕</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-const TRADES = ["General", "Plumber", "Electrician", "HVAC", "Roofer", "Painter", "Flooring", "Supplies", "Other"];
+function SectionHeader({ title }) {
+  const meta = CATEGORY_META[title] ?? CATEGORY_META.Other;
+  return (
+    <View
+      className="flex-row items-center gap-2 px-0 pt-5 pb-2"
+      style={{ backgroundColor: "#F8F7F4" }}
+    >
+      <View
+        className="w-6 h-6 rounded-lg items-center justify-center"
+        style={{ backgroundColor: meta.color + "22" }}
+      >
+        <Text style={{ fontSize: 12 }}>{meta.icon}</Text>
+      </View>
+      <Text style={{ fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1.2, color: meta.color }}>
+        {title}
+      </Text>
+    </View>
+  );
+}
 
 export default function ContractorsScreen() {
   const { data: contractors = [], isLoading } = useContractors();
@@ -70,51 +113,69 @@ export default function ContractorsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState("");
   const [trade, setTrade] = useState("General");
+  const [category, setCategory] = useState("Trades");
   const [phone, setPhone] = useState("");
+
+  const sections = groupByCategory(contractors);
+  const totalCount = contractors.length;
 
   async function handleCreate() {
     if (!name.trim()) return;
     try {
-      await createContractor.mutateAsync({ name: name.trim(), trade, phone: phone.trim() || null });
+      await createContractor.mutateAsync({
+        name: name.trim(),
+        trade,
+        category,
+        phone: phone.trim() || null,
+      });
       setModalVisible(false);
-      setName(""); setTrade("General"); setPhone("");
+      setName(""); setTrade("General"); setCategory("Trades"); setPhone("");
     } catch (e) {
       Alert.alert("Error", e.message ?? "Could not save.");
     }
   }
 
+  function resetModal() {
+    setModalVisible(false);
+    setName(""); setTrade("General"); setCategory("Trades"); setPhone("");
+  }
+
   return (
     <View className="flex-1 bg-brand-bg">
+      {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
         style={{ paddingTop: 56, paddingBottom: 24, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
         <Text className="text-white text-2xl font-bold">Contractors</Text>
         <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginTop: 3 }}>
-          {contractors.length} saved contact{contractors.length !== 1 ? "s" : ""}
+          {totalCount} contact{totalCount !== 1 ? "s" : ""} · {sections.length} group{sections.length !== 1 ? "s" : ""}
         </Text>
       </LinearGradient>
 
-      <View className="flex-1 px-4 pt-5">
+      {/* List */}
+      <View className="flex-1 px-4">
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#F59E0B" />
           </View>
-        ) : contractors.length === 0 ? (
+        ) : sections.length === 0 ? (
           <View className="flex-1 items-center justify-center gap-3 pb-24">
             <View className="w-24 h-24 rounded-3xl bg-brand-amber/10 border border-brand-amber/20 items-center justify-center">
               <Text style={{ fontSize: 44 }}>👷</Text>
             </View>
             <Text className="text-xl font-bold text-brand-dark">No contractors yet</Text>
             <Text className="text-sm text-brand-muted text-center px-10 leading-5">
-              Save your trusted contractors to quickly assign them to repair line items.
+              Add contractors and suppliers to quickly assign them to repair line items.
             </Text>
           </View>
         ) : (
-          <FlatList
-            data={contractors}
+          <SectionList
+            sections={sections}
             keyExtractor={(item) => item.id}
+            renderSectionHeader={({ section }) => <SectionHeader title={section.title} />}
             renderItem={({ item }) => (
               <ContractorCard contractor={item} onDelete={(id) => deleteContractor.mutate(id)} />
             )}
+            stickySectionHeadersEnabled
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }}
           />
@@ -125,10 +186,7 @@ export default function ContractorsScreen() {
       <TouchableOpacity
         onPress={() => setModalVisible(true)}
         activeOpacity={0.9}
-        style={{
-          position: "absolute", bottom: 28, right: 20,
-          ...shadows.amber,
-        }}
+        style={{ position: "absolute", bottom: 28, right: 20, ...shadows.amber }}
       >
         <LinearGradient
           colors={["#F59E0B", "#D97706"]}
@@ -138,14 +196,15 @@ export default function ContractorsScreen() {
         </LinearGradient>
       </TouchableOpacity>
 
-      {/* Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+      {/* Add Modal */}
+      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={resetModal}>
         <KeyboardAvoidingView className="flex-1 justify-end" behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={{ backgroundColor: "#1A1F2E", borderTopLeftRadius: 28, borderTopRightRadius: 28, borderTopWidth: 1, borderColor: "rgba(255,255,255,0.1)", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 48 }}>
             <View style={{ width: 40, height: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 4, alignSelf: "center", marginBottom: 24 }} />
             <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 20 }}>Add Contractor</Text>
 
             <View style={{ gap: 16 }}>
+              {/* Name */}
               <View style={{ gap: 6 }}>
                 <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>Name *</Text>
                 <TextInput
@@ -157,21 +216,36 @@ export default function ContractorsScreen() {
                 />
               </View>
 
+              {/* Category picker */}
+              <View style={{ gap: 6 }}>
+                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>Category</Text>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  {CATEGORIES.map((cat) => {
+                    const meta = CATEGORY_META[cat];
+                    const active = category === cat;
+                    return (
+                      <TouchableOpacity
+                        key={cat} onPress={() => setCategory(cat)}
+                        style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: "center", backgroundColor: active ? meta.color : "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: active ? meta.color : "rgba(255,255,255,0.15)" }}
+                      >
+                        <Text style={{ fontSize: 16 }}>{meta.icon}</Text>
+                        <Text style={{ color: active ? "#fff" : "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", marginTop: 3 }}>{cat}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
               {/* Trade picker */}
               <View style={{ gap: 6 }}>
-                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>Trade</Text>
+                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>Trade / Type</Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   {TRADES.map((t) => (
                     <TouchableOpacity
-                      key={t}
-                      onPress={() => setTrade(t)}
-                      style={{
-                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
-                        backgroundColor: trade === t ? "#F59E0B" : "rgba(255,255,255,0.08)",
-                        borderWidth: 1, borderColor: trade === t ? "#F59E0B" : "rgba(255,255,255,0.15)",
-                      }}
+                      key={t} onPress={() => setTrade(t)}
+                      style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: trade === t ? "#F59E0B" : "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: trade === t ? "#F59E0B" : "rgba(255,255,255,0.15)" }}
                     >
-                      <Text style={{ color: trade === t ? "#fff" : "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: "600" }}>
+                      <Text style={{ color: trade === t ? "#fff" : "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "600" }}>
                         {TRADE_ICON[t] ?? "👷"} {t}
                       </Text>
                     </TouchableOpacity>
@@ -179,6 +253,7 @@ export default function ContractorsScreen() {
                 </View>
               </View>
 
+              {/* Phone */}
               <View style={{ gap: 6 }}>
                 <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>Phone</Text>
                 <TextInput
@@ -191,10 +266,8 @@ export default function ContractorsScreen() {
             </View>
 
             <View style={{ flexDirection: "row", gap: 12, marginTop: 24 }}>
-              <TouchableOpacity
-                onPress={() => { setModalVisible(false); setName(""); setTrade("General"); setPhone(""); }}
-                style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", borderRadius: 16, paddingVertical: 16, alignItems: "center" }}
-              >
+              <TouchableOpacity onPress={resetModal}
+                style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", borderRadius: 16, paddingVertical: 16, alignItems: "center" }}>
                 <Text style={{ color: "rgba(255,255,255,0.6)", fontWeight: "700" }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleCreate} disabled={!name.trim() || createContractor.isPending} activeOpacity={0.85} style={{ flex: 1 }}>
