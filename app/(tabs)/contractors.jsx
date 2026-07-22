@@ -1,3 +1,4 @@
+import * as Linking from "expo-linking";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
@@ -144,7 +145,14 @@ function ContractorCard({ contractor, onDelete, onEdit }) {
         <Text className="text-brand-dark font-bold text-base">{contractor.name}</Text>
         <Text className="text-brand-muted text-sm">{contractor.trade}</Text>
         {contractor.phone ? (
-          <Text className="text-brand-muted text-xs mt-0.5">📞 {contractor.phone}</Text>
+          Platform.OS === "web" ? (
+            <Text className="text-brand-muted text-xs mt-0.5">📞 {contractor.phone}</Text>
+          ) : (
+            <TouchableOpacity onPress={() => Linking.openURL(`tel:${contractor.phone.replace(/\D/g, "")}`)}
+              activeOpacity={0.6} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+              <Text style={{ fontSize: 12, color: "#3B82F6", marginTop: 2 }}>📞 {contractor.phone}</Text>
+            </TouchableOpacity>
+          )
         ) : null}
       </View>
       <TouchableOpacity onPress={() => onEdit(contractor)}
