@@ -35,6 +35,7 @@ export default function AccountScreen() {
   const [editingEmail, setEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
+  const [pwResetSent, setPwResetSent] = useState(false);
 
   useEffect(() => {
     if (isMockMode()) return; // no real user in mock mode
@@ -69,7 +70,7 @@ export default function AccountScreen() {
     if (error) {
       Alert.alert("Error", error.message);
     } else {
-      Alert.alert("Reset email sent ✓", `Check your inbox at ${email} for a password reset link.`);
+      setPwResetSent(true);
     }
   }
 
@@ -146,6 +147,20 @@ export default function AccountScreen() {
           </View>
         )}
         <Row icon="🔒" label="Change Password" sublabel="Update your password" onPress={handleChangePassword} />
+        {pwResetSent && (
+          <View style={{ backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#86EFAC", borderRadius: 16, padding: 14, marginBottom: 10, flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+            <Text style={{ fontSize: 18 }}>✅</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: "#166534", fontWeight: "700", fontSize: 14 }}>Password reset email sent!</Text>
+              <Text style={{ color: "#166534", fontSize: 13, marginTop: 3, lineHeight: 18 }}>
+                Check your inbox at <Text style={{ fontWeight: "700" }}>{email}</Text> for a link to reset your password.
+              </Text>
+              <TouchableOpacity onPress={() => setPwResetSent(false)} style={{ marginTop: 8 }}>
+                <Text style={{ color: "#16A34A", fontSize: 12, fontWeight: "600" }}>Dismiss</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         <Text className="text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 ml-1 mt-5">
           General
