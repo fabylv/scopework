@@ -1,8 +1,5 @@
 import "../global.css";
 
-import { StyleSheet } from "react-native";
-StyleSheet.setFlag("darkMode", "class");
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
