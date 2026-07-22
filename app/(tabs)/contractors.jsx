@@ -26,6 +26,7 @@ function confirmDelete(name, onConfirm) {
 }
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import HeaderLogo from "../../components/HeaderLogo";
 import {
   useContractors,
   useCreateContractor,
@@ -258,7 +259,10 @@ export default function ContractorsScreen() {
       {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
         style={{ paddingTop: insets.top + 12, paddingBottom: 24, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
-        <Text className="text-white text-2xl font-bold">Contractors</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <Text className="text-white text-2xl font-bold">Contractors</Text>
+          <HeaderLogo />
+        </View>
         <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginTop: 3 }}>
           {totalCount} contact{totalCount !== 1 ? "s" : ""} · {sections.length} group{sections.length !== 1 ? "s" : ""}
         </Text>

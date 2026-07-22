@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Alert, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import HeaderLogo from "../../components/HeaderLogo";
 import { isMockMode } from "../../lib/mockData";
 import { shadows } from "../../lib/shadow";
 import { supabase } from "../../lib/supabase";
@@ -111,6 +112,9 @@ export default function AccountScreen() {
       {/* Dark header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
         style={{ paddingTop: insets.top + 12, paddingBottom: 28, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <HeaderLogo />
+        </View>
         <View className="flex-row items-center gap-4">
           <LinearGradient colors={["#F59E0B", "#D97706"]}
             style={{ width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center" }}>

@@ -6,6 +6,7 @@ import { Alert, Image, Platform, ScrollView, Text, TouchableOpacity, View } from
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
+import HeaderLogo from "../../../components/HeaderLogo";
 import { shadows } from "../../../lib/shadow";
 
 // ─── Mock AI results (cycles on each photo) ──────────────────────────────────
@@ -251,9 +252,12 @@ export default function CaptureScreen() {
     <View style={{ flex:1, backgroundColor:"#12161F" }}>
       {/* Header */}
       <LinearGradient colors={["#1A1F2E","#12161F"]} style={{ paddingTop: insets.top + 12, paddingHorizontal:20, paddingBottom:20 }}>
-        <TouchableOpacity onPress={() => router.replace(`/project/${projectId}`)} style={{ marginBottom:12 }}>
-          <Text style={{ color:"#F59E0B", fontSize:14, fontWeight:"600" }}>← Back to Report</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+          <TouchableOpacity onPress={() => router.replace(`/project/${projectId}`)}>
+            <Text style={{ color:"#F59E0B", fontSize:14, fontWeight:"600" }}>← Back to Report</Text>
+          </TouchableOpacity>
+          <HeaderLogo />
+        </View>
         <Text style={{ color:"#fff", fontSize:22, fontWeight:"800" }}>Capture Photos</Text>
         <Text style={{ color: analyzing > 0 ? "#F59E0B" : "rgba(255,255,255,0.4)", fontSize:13, marginTop:3 }}>
           {analyzing > 0

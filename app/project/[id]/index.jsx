@@ -11,6 +11,7 @@ import {
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
+import HeaderLogo from "../../../components/HeaderLogo";
 import IssueRow from "../../../components/IssueRow";
 import { useProject } from "../../../hooks/useProjects";
 import { updateIssue } from "../../../lib/api/issues";
@@ -103,9 +104,12 @@ export default function ProjectDetailScreen() {
       {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
         style={{ paddingTop: insets.top + 12, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
-        <TouchableOpacity onPress={() => router.replace("/(tabs)/dashboard")} className="mb-4">
-          <Text style={{ color: "#F59E0B", fontSize: 14, fontWeight: "600" }}>← Back</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <TouchableOpacity onPress={() => router.replace("/(tabs)/dashboard")}>
+            <Text style={{ color: "#F59E0B", fontSize: 14, fontWeight: "600" }}>← Back</Text>
+          </TouchableOpacity>
+          <HeaderLogo />
+        </View>
         <Text className="text-white text-xl font-bold" numberOfLines={1}>{project.name}</Text>
         {project.address ? (
           <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginTop: 3 }}>📍 {project.address}</Text>

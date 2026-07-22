@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import HeaderLogo from "../../components/HeaderLogo";
 import ProjectCard from "../../components/ProjectCard";
 
 function toTitleCase(str) {
@@ -86,9 +87,7 @@ export default function DashboardScreen() {
             <Text className="text-white/50 text-sm">Good work,</Text>
             <Text className="text-white text-2xl font-bold">Your Projects</Text>
           </View>
-          <View className="w-10 h-10 rounded-2xl bg-brand-amber items-center justify-center">
-            <Text style={{ fontSize: 18 }}>🔍</Text>
-          </View>
+          <HeaderLogo tappable={false} />
         </View>
         <StatsBar projects={projects} />
       </LinearGradient>
