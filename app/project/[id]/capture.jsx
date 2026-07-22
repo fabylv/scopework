@@ -278,6 +278,22 @@ export default function CaptureScreen() {
   }
 
   async function handlePicker() {
+    if (Platform.OS === "web") {
+      // On web, use a native file input for better mobile/camera support
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.multiple = true;
+      input.onchange = async (e) => {
+        const files = Array.from(e.target.files ?? []);
+        for (const file of files) {
+          const uri = URL.createObjectURL(file);
+          await processAsset({ uri, fileName: file.name, mimeType: file.type });
+        }
+      };
+      input.click();
+      return;
+    }
     setIsCapturing(true);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -291,6 +307,22 @@ export default function CaptureScreen() {
         await processAsset(asset);
       }
     }
+  }
+
+  async function handleWebCamera() {
+    // On web/mobile Chrome, trigger camera directly via capture attribute
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment"; // rear camera
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const uri = URL.createObjectURL(file);
+        await processAsset({ uri, fileName: file.name, mimeType: file.type });
+      }
+    };
+    input.click();
   }
 
   function handleRetake(photoId) {
@@ -325,21 +357,25 @@ export default function CaptureScreen() {
 
       {/* Action buttons */}
       <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}>
-        {Platform.OS !== "web" && (
-          <TouchableOpacity onPress={handleCamera} disabled={isCapturing} activeOpacity={0.85} style={{ flex: 1 }}>
-            <LinearGradient colors={["#F59E0B", "#D97706"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={{ borderRadius: 18, paddingVertical: 16, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}>
-              <Text style={{ fontSize: 18 }}>📷</Text>
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Camera</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
+        {/* Camera button — native or web */}
+        <TouchableOpacity
+          onPress={Platform.OS === "web" ? handleWebCamera : handleCamera}
+          disabled={isCapturing}
+          activeOpacity={0.85}
+          style={{ flex: 1 }}
+        >
+          <LinearGradient colors={["#F59E0B", "#D97706"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={{ borderRadius: 18, paddingVertical: 16, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}>
+            <Text style={{ fontSize: 18 }}>📷</Text>
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Camera</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Upload from gallery */}
         <TouchableOpacity onPress={handlePicker} disabled={isCapturing} activeOpacity={0.85}
           style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 18, paddingVertical: 16, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }}>
-          <Text style={{ fontSize: 18 }}>{Platform.OS === "web" ? "📁" : "🖼️"}</Text>
-          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
-            {Platform.OS === "web" ? "Upload Photos" : "Library"}
-          </Text>
+          <Text style={{ fontSize: 18 }}>🖼️</Text>
+          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Gallery</Text>
         </TouchableOpacity>
       </View>
 
