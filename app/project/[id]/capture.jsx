@@ -154,12 +154,18 @@ export default function CaptureScreen() {
   }
 
   async function handleCamera() {
-    if (Platform.OS !== "web") {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Camera Access", "RepairIQ needs camera access to capture photos.");
-        return;
-      }
+    if (Platform.OS === "web") {
+      // On mobile web, launchImageLibraryAsync opens Android's native picker
+      // which includes a "Camera" option in the bottom sheet
+      await pickAndProcess(() =>
+        ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 })
+      );
+      return;
+    }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Camera Access", "RepairIQ needs camera access to capture photos.");
+      return;
     }
     await pickAndProcess(() =>
       ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 })
@@ -214,19 +220,17 @@ export default function CaptureScreen() {
 
       {/* Buttons */}
       <View style={{ flexDirection:"row", gap:12, paddingHorizontal:16, paddingTop:16, paddingBottom:12 }}>
-        {Platform.OS !== "web" && (
-          <TouchableOpacity onPress={handleCamera} activeOpacity={0.85} style={{ flex:1 }}>
-            <LinearGradient colors={["#F59E0B","#D97706"]} start={{x:0,y:0}} end={{x:1,y:0}}
-              style={{ borderRadius:18, paddingVertical:16, alignItems:"center", flexDirection:"row", justifyContent:"center", gap:8 }}>
-              <Text style={{ fontSize:18 }}>📷</Text>
-              <Text style={{ color:"#fff", fontWeight:"700", fontSize:14 }}>Camera</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={handleCamera} activeOpacity={0.85} style={{ flex:1 }}>
+          <LinearGradient colors={["#F59E0B","#D97706"]} start={{x:0,y:0}} end={{x:1,y:0}}
+            style={{ borderRadius:18, paddingVertical:16, alignItems:"center", flexDirection:"row", justifyContent:"center", gap:8 }}>
+            <Text style={{ fontSize:18 }}>📷</Text>
+            <Text style={{ color:"#fff", fontWeight:"700", fontSize:14 }}>Camera</Text>
+          </LinearGradient>
+        </TouchableOpacity>
         <TouchableOpacity onPress={handleGallery} activeOpacity={0.85}
           style={{ flex:1, backgroundColor:"rgba(255,255,255,0.08)", borderRadius:18, paddingVertical:16, alignItems:"center", flexDirection:"row", justifyContent:"center", gap:8, borderWidth:1, borderColor:"rgba(255,255,255,0.15)" }}>
-          <Text style={{ fontSize:18 }}>{Platform.OS === "web" ? "📁" : "🖼️"}</Text>
-          <Text style={{ color:"#fff", fontWeight:"700", fontSize:14 }}>{Platform.OS === "web" ? "Upload Photos" : "Gallery"}</Text>
+          <Text style={{ fontSize:18 }}>🖼️</Text>
+          <Text style={{ color:"#fff", fontWeight:"700", fontSize:14 }}>Gallery</Text>
         </TouchableOpacity>
       </View>
 
