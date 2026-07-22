@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -19,98 +20,136 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [focusedField, setFocusedField] = useState(null);
 
   async function handleLogin() {
     setError(null);
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
+    if (!email.trim() || !password) {
+      setError("Please enter your email and password.");
+      return;
     }
-    // On success, the onAuthStateChange listener in _layout.jsx handles the redirect
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setLoading(false);
+    if (error) setError(error.message);
   }
 
+  const inputStyle = (field) => [
+    "bg-white/10 border rounded-2xl px-4 py-4 text-white text-base",
+    focusedField === field ? "border-brand-amber" : "border-white/20",
+  ].join(" ");
+
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-brand-bg"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <LinearGradient
+      colors={["#1A1F2E", "#12161F", "#1A1F2E"]}
+      style={{ flex: 1 }}
     >
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-6 py-12"
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* Header */}
-        <View className="mb-10">
-          <Text className="text-3xl font-bold text-brand-dark">RepairIQ</Text>
-          <Text className="text-base text-brand-muted mt-1">
-            AI-powered repair estimates
-          </Text>
-        </View>
-
-        {/* Form */}
-        <View className="gap-4">
-          <View>
-            <Text className="text-sm font-medium text-brand-dark mb-1.5">
-              Email
-            </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              className="bg-white border border-brand-border rounded-xl px-4 py-3 text-base text-brand-dark"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <View>
-            <Text className="text-sm font-medium text-brand-dark mb-1.5">
-              Password
-            </Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              secureTextEntry
-              autoComplete="current-password"
-              className="bg-white border border-brand-border rounded-xl px-4 py-3 text-base text-brand-dark"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          {error ? (
-            <View className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              <Text className="text-sm text-brand-danger">{error}</Text>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 28, paddingVertical: 60 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Brand mark */}
+          <View className="items-center mb-12">
+            <View className="w-20 h-20 rounded-3xl bg-brand-amber items-center justify-center mb-5 shadow-lg"
+              style={{ shadowColor: "#F59E0B", shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } }}>
+              <Text style={{ fontSize: 36 }}>🔍</Text>
             </View>
-          ) : null}
-
-          <TouchableOpacity
-            onPress={handleLogin}
-            disabled={loading}
-            className="bg-brand-amber rounded-xl py-4 items-center mt-2"
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text className="text-white font-semibold text-base">Sign In</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer */}
-        <View className="flex-row justify-center mt-8">
-          <Text className="text-sm text-brand-muted">Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
-            <Text className="text-sm font-semibold text-brand-amber">
-              Sign Up
+            <Text className="text-white text-4xl font-bold tracking-tight">RepairIQ</Text>
+            <Text className="text-white/50 text-sm mt-1.5 text-center">
+              AI-powered repair estimates
             </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          </View>
+
+          {/* Card */}
+          <View
+            className="rounded-3xl overflow-hidden"
+            style={{ backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" }}
+          >
+            <View className="px-6 py-7 gap-4">
+              <Text className="text-white text-xl font-semibold">Welcome back</Text>
+
+              {/* Email */}
+              <View className="gap-1.5">
+                <Text className="text-white/60 text-xs font-medium uppercase tracking-wider">Email</Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField(null)}
+                  className={inputStyle("email")}
+                />
+              </View>
+
+              {/* Password */}
+              <View className="gap-1.5">
+                <Text className="text-white/60 text-xs font-medium uppercase tracking-wider">Password</Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  secureTextEntry
+                  autoComplete="current-password"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={() => setFocusedField(null)}
+                  className={inputStyle("password")}
+                />
+              </View>
+
+              {/* Error */}
+              {error ? (
+                <View className="bg-red-500/20 border border-red-500/40 rounded-xl px-4 py-3">
+                  <Text className="text-red-300 text-sm">{error}</Text>
+                </View>
+              ) : null}
+
+              {/* CTA */}
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.85}
+                className="mt-1"
+              >
+                <LinearGradient
+                  colors={["#F59E0B", "#D97706"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 16, paddingVertical: 16, alignItems: "center" }}
+                >
+                  {loading
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Sign In →</Text>
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Sign up link */}
+          <View className="flex-row justify-center mt-8">
+            <Text className="text-white/40 text-sm">Don't have an account? </Text>
+            <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
+              <Text className="text-brand-amber text-sm font-semibold">Create one</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Bottom tagline */}
+          <View className="items-center mt-12">
+            <Text className="text-white/20 text-xs text-center">
+              For real estate investors, contractors &amp; landlords
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }

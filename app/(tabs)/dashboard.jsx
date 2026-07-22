@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -7,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -17,9 +17,36 @@ import {
 import ProjectCard from "../../components/ProjectCard";
 import { useCreateProject, useProjects } from "../../hooks/useProjects";
 
+function StatsBar({ projects = [] }) {
+  const total = projects.reduce((sum, p) => {
+    const cost = (p.issues ?? []).reduce((s, i) => s + (i.estimated_cost ?? 0), 0);
+    return sum + cost;
+  }, 0);
+
+  return (
+    <View className="flex-row gap-3 px-5 pb-5">
+      {[
+        { label: "Projects", value: projects.length, icon: "🏠" },
+        { label: "Total Estimates", value: `$${total.toLocaleString()}`, icon: "💰" },
+        { label: "Active", value: projects.filter((p) => p.status !== "complete").length, icon: "🔄" },
+      ].map(({ label, value, icon }) => (
+        <View
+          key={label}
+          className="flex-1 rounded-2xl px-3 py-3 items-center"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}
+        >
+          <Text style={{ fontSize: 18 }}>{icon}</Text>
+          <Text className="text-white font-bold text-base mt-1">{value}</Text>
+          <Text className="text-white/40 text-[10px] mt-0.5 text-center">{label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
-  const { data: projects, isLoading, isError, refetch } = useProjects();
+  const { data: projects = [], isLoading, isError, refetch } = useProjects();
   const createProject = useCreateProject();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -45,39 +72,56 @@ export default function DashboardScreen() {
 
   return (
     <View className="flex-1 bg-brand-bg">
-      {/* Header */}
-      <View className="bg-brand-dark px-5 pt-14 pb-5">
-        <Text className="text-2xl font-bold text-white">RepairIQ</Text>
-        <Text className="text-sm text-gray-400 mt-0.5">
-          Your repair estimates
-        </Text>
-      </View>
+      {/* Dark gradient header */}
+      <LinearGradient colors={["#1A1F2E", "#252C3D"]} style={{ paddingTop: 56, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: "hidden" }}>
+        <View className="px-5 pb-4 flex-row items-center justify-between">
+          <View>
+            <Text className="text-white/50 text-sm">Good work,</Text>
+            <Text className="text-white text-2xl font-bold">Your Projects</Text>
+          </View>
+          <View className="w-10 h-10 rounded-2xl bg-brand-amber items-center justify-center">
+            <Text style={{ fontSize: 18 }}>🔍</Text>
+          </View>
+        </View>
+        <StatsBar projects={projects} />
+      </LinearGradient>
 
       {/* Content */}
-      <View className="flex-1 px-4 pt-4">
+      <View className="flex-1 px-4 pt-5">
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#FFA12B" />
+            <ActivityIndicator size="large" color="#F59E0B" />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center gap-3">
-            <Text className="text-brand-muted text-base">
-              Failed to load projects.
-            </Text>
-            <TouchableOpacity onPress={refetch}>
-              <Text className="text-brand-amber font-semibold">Try again</Text>
+            <Text className="text-4xl">⚠️</Text>
+            <Text className="text-brand-muted text-base">Failed to load projects.</Text>
+            <TouchableOpacity onPress={refetch} className="bg-brand-amber px-6 py-2.5 rounded-xl">
+              <Text className="text-white font-semibold">Try again</Text>
             </TouchableOpacity>
           </View>
-        ) : projects?.length === 0 ? (
-          <View className="flex-1 items-center justify-center gap-2 pb-20">
-            <Text className="text-4xl">🏗️</Text>
-            <Text className="text-lg font-semibold text-brand-dark mt-2">
-              No projects yet
+        ) : projects.length === 0 ? (
+          <View className="flex-1 items-center justify-center gap-3 pb-24">
+            <View className="w-24 h-24 rounded-3xl bg-brand-amber/10 border border-brand-amber/20 items-center justify-center">
+              <Text style={{ fontSize: 44 }}>🏗️</Text>
+            </View>
+            <Text className="text-xl font-bold text-brand-dark mt-2">No projects yet</Text>
+            <Text className="text-sm text-brand-muted text-center px-10 leading-5">
+              Add your first property to start capturing photos and generating AI repair estimates.
             </Text>
-            <Text className="text-sm text-brand-muted text-center px-8">
-              Add your first property to start capturing repair photos and
-              generating estimates.
-            </Text>
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              activeOpacity={0.85}
+              className="mt-2"
+            >
+              <LinearGradient
+                colors={["#F59E0B", "#D97706"]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={{ borderRadius: 16, paddingVertical: 14, paddingHorizontal: 28 }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>+ New Project</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         ) : (
           <FlatList
@@ -90,84 +134,90 @@ export default function DashboardScreen() {
               />
             )}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 120 }}
           />
         )}
       </View>
 
       {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        className="absolute bottom-8 right-5 bg-brand-amber rounded-full w-14 h-14 items-center justify-center shadow-lg"
-        activeOpacity={0.85}
-      >
-        <Text className="text-white text-3xl font-light leading-none">+</Text>
-      </TouchableOpacity>
+      {projects.length > 0 && (
+        <TouchableOpacity
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.9}
+          style={{
+            position: "absolute", bottom: 28, right: 20,
+            shadowColor: "#F59E0B", shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 4 },
+            elevation: 8,
+          }}
+        >
+          <LinearGradient
+            colors={["#F59E0B", "#D97706"]}
+            style={{ width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center" }}
+          >
+            <Text style={{ color: "#fff", fontSize: 26, fontWeight: "300", lineHeight: 30 }}>+</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
 
       {/* New Project Modal */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          className="flex-1 justify-end"
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View className="bg-brand-bg rounded-t-2xl px-5 pt-5 pb-10 shadow-xl">
-            <View className="w-10 h-1 bg-gray-300 rounded-full self-center mb-5" />
-            <Text className="text-xl font-bold text-brand-dark mb-5">
-              New Project
-            </Text>
+      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+        <KeyboardAvoidingView className="flex-1 justify-end" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <View
+            style={{ backgroundColor: "#1A1F2E", borderTopLeftRadius: 28, borderTopRightRadius: 28, borderTopWidth: 1, borderColor: "rgba(255,255,255,0.1)" }}
+            className="px-6 pt-6 pb-12"
+          >
+            <View className="w-10 h-1 bg-white/20 rounded-full self-center mb-6" />
+            <Text className="text-white text-xl font-bold mb-6">New Project</Text>
 
             <View className="gap-4">
-              <View>
-                <Text className="text-sm font-medium text-brand-dark mb-1.5">
-                  Property Name *
-                </Text>
+              <View className="gap-1.5">
+                <Text className="text-white/50 text-xs font-medium uppercase tracking-wider">Property Name *</Text>
                 <TextInput
                   value={name}
                   onChangeText={setName}
-                  placeholder="e.g. 123 Main St — Master Bath"
-                  className="bg-white border border-brand-border rounded-xl px-4 py-3 text-base text-brand-dark"
-                  placeholderTextColor="#9CA3AF"
+                  placeholder="e.g. 123 Oak Ave — Kitchen"
+                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  className="bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white text-base"
                   autoFocus
                 />
               </View>
-
-              <View>
-                <Text className="text-sm font-medium text-brand-dark mb-1.5">
-                  Address (optional)
-                </Text>
+              <View className="gap-1.5">
+                <Text className="text-white/50 text-xs font-medium uppercase tracking-wider">Address (optional)</Text>
                 <TextInput
                   value={address}
                   onChangeText={setAddress}
-                  placeholder="e.g. 123 Main St, Miami FL"
-                  className="bg-white border border-brand-border rounded-xl px-4 py-3 text-base text-brand-dark"
-                  placeholderTextColor="#9CA3AF"
+                  placeholder="e.g. Miami, FL 33101"
+                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  className="bg-white/10 border border-white/20 rounded-2xl px-4 py-4 text-white text-base"
                 />
               </View>
+            </View>
 
-              <View className="flex-row gap-3 mt-2">
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  className="flex-1 border border-brand-border rounded-xl py-3.5 items-center"
+            <View className="flex-row gap-3 mt-6">
+              <TouchableOpacity
+                onPress={() => { setModalVisible(false); setName(""); setAddress(""); }}
+                className="flex-1 rounded-2xl py-4 items-center"
+                style={{ backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }}
+              >
+                <Text className="text-white/60 font-semibold">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleCreate}
+                disabled={!name.trim() || createProject.isPending}
+                activeOpacity={0.85}
+                className="flex-1"
+              >
+                <LinearGradient
+                  colors={["#F59E0B", "#D97706"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 16, paddingVertical: 16, alignItems: "center" }}
                 >
-                  <Text className="text-brand-muted font-semibold">Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleCreate}
-                  disabled={!name.trim() || createProject.isPending}
-                  className="flex-1 bg-brand-amber rounded-xl py-3.5 items-center"
-                >
-                  {createProject.isPending ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text className="text-white font-semibold">Create</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
+                  {createProject.isPending
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={{ color: "#fff", fontWeight: "700" }}>Create →</Text>
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>

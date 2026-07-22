@@ -10,18 +10,18 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          dark: "#1E2530",
-          amber: "#FFA12B",
-          bg: "#FAF9F6",
-          card: "#FFFFFF",
-          muted: "#6B7280",
-          border: "#E5E7EB",
-          danger: "#EF4444",
-          success: "#22C55E",
+          dark:    "#1A1F2E",   // deep navy
+          darker:  "#12161F",   // near-black
+          amber:   "#F59E0B",   // warm amber
+          "amber-light": "#FCD34D",
+          bg:      "#F8F7F4",   // warm off-white
+          card:    "#FFFFFF",
+          muted:   "#64748B",
+          border:  "#E2E8F0",
+          danger:  "#EF4444",
+          success: "#10B981",
+          info:    "#3B82F6",
         },
-      },
-      fontFamily: {
-        sans: ["Inter", "System"],
       },
     },
   },
