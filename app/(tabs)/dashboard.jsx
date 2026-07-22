@@ -15,6 +15,10 @@ import {
 } from "react-native";
 
 import ProjectCard from "../../components/ProjectCard";
+
+function toTitleCase(str) {
+  return str.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 import { shadows } from "../../lib/shadow";
 import { useCreateProject, useProjects } from "../../hooks/useProjects";
 
@@ -58,7 +62,7 @@ export default function DashboardScreen() {
     if (!name.trim()) return;
     try {
       const project = await createProject.mutateAsync({
-        name: name.trim(),
+        name: toTitleCase(name),
         address: address.trim() || null,
         status: "draft",
       });

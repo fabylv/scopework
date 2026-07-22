@@ -28,6 +28,7 @@ import {
   useContractors,
   useCreateContractor,
   useDeleteContractor,
+  useUpdateContractor,
 } from "../../hooks/useContractors";
 import { shadows } from "../../lib/shadow";
 
@@ -126,7 +127,7 @@ function groupContractors(contractors = []) {
   return sections;
 }
 
-function ContractorCard({ contractor, onDelete }) {
+function ContractorCard({ contractor, onDelete, onEdit }) {
   const icon = TRADE_ICON[contractor.trade] ?? "👷";
   return (
     <View
@@ -146,6 +147,10 @@ function ContractorCard({ contractor, onDelete }) {
           <Text className="text-brand-muted text-xs mt-0.5">📞 {contractor.phone}</Text>
         ) : null}
       </View>
+      <TouchableOpacity onPress={() => onEdit(contractor)}
+        style={{ width: 32, height: 32, alignItems: "center", justifyContent: "center", marginRight: 4 }}>
+        <Text style={{ fontSize: 15 }}>✏️</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         onPress={() => confirmDelete(contractor.name, () => onDelete(contractor.id))}
         className="w-8 h-8 items-center justify-center"
@@ -184,9 +189,11 @@ function SectionHeader({ title, display, kind }) {
 export default function ContractorsScreen() {
   const { data: contractors = [], isLoading } = useContractors();
   const createContractor = useCreateContractor();
+  const updateContractor = useUpdateContractor();
   const deleteContractor = useDeleteContractor();
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingContractor, setEditingContractor] = useState(null); // null = new, object = editing
   const [name, setName] = useState("");
   const [trade, setTrade] = useState("General");
   const [category, setCategory] = useState("Trades");
@@ -194,18 +201,37 @@ export default function ContractorsScreen() {
 
   const sections = groupContractors(contractors);
   const totalCount = contractors.length;
+  const isSaving = createContractor.isPending || updateContractor.isPending;
 
-  async function handleCreate() {
+  function openAdd() {
+    setEditingContractor(null);
+    setName(""); setTrade("General"); setCategory("Trades"); setPhone("");
+    setModalVisible(true);
+  }
+
+  function openEdit(contractor) {
+    setEditingContractor(contractor);
+    setName(contractor.name);
+    setTrade(contractor.trade ?? "General");
+    setCategory(contractor.category ?? "Trades");
+    setPhone(contractor.phone ?? "");
+    setModalVisible(true);
+  }
+
+  async function handleSave() {
     if (!name.trim()) return;
     try {
-      await createContractor.mutateAsync({
-        name: toTitleCase(name),
-        trade,
-        category,
-        phone: phone.trim() || null,
-      });
-      setModalVisible(false);
-      setName(""); setTrade("General"); setCategory("Trades"); setPhone("");
+      if (editingContractor) {
+        await updateContractor.mutateAsync({
+          id: editingContractor.id,
+          updates: { name: toTitleCase(name), trade, category, phone: phone.trim() || null },
+        });
+      } else {
+        await createContractor.mutateAsync({
+          name: toTitleCase(name), trade, category, phone: phone.trim() || null,
+        });
+      }
+      resetModal();
     } catch (e) {
       Alert.alert("Error", e.message ?? "Could not save.");
     }
@@ -213,6 +239,7 @@ export default function ContractorsScreen() {
 
   function resetModal() {
     setModalVisible(false);
+    setEditingContractor(null);
     setName(""); setTrade("General"); setCategory("Trades"); setPhone("");
   }
 
@@ -249,7 +276,7 @@ export default function ContractorsScreen() {
             keyExtractor={(item) => item.id}
             renderSectionHeader={({ section }) => <SectionHeader title={section.title} display={section.display} kind={section.kind} />}
             renderItem={({ item }) => (
-              <ContractorCard contractor={item} onDelete={(id) => deleteContractor.mutate(id)} />
+              <ContractorCard contractor={item} onDelete={(id) => deleteContractor.mutate(id)} onEdit={openEdit} />
             )}
             stickySectionHeadersEnabled
             showsVerticalScrollIndicator={false}
@@ -260,7 +287,7 @@ export default function ContractorsScreen() {
 
       {/* FAB */}
       <TouchableOpacity
-        onPress={() => setModalVisible(true)}
+        onPress={openAdd}
         activeOpacity={0.9}
         style={{ position: "absolute", bottom: 28, right: 20, ...shadows.amber }}
       >
@@ -277,7 +304,7 @@ export default function ContractorsScreen() {
         <KeyboardAvoidingView className="flex-1 justify-end" behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={{ backgroundColor: "#1A1F2E", borderTopLeftRadius: 28, borderTopRightRadius: 28, borderTopWidth: 1, borderColor: "rgba(255,255,255,0.1)", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 48 }}>
             <View style={{ width: 40, height: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 4, alignSelf: "center", marginBottom: 24 }} />
-            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 20 }}>Add Contractor</Text>
+            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 20 }}>{editingContractor ? "Edit Contractor" : "Add Contractor"}</Text>
 
             <View style={{ gap: 16 }}>
               {/* Name */}
@@ -346,10 +373,10 @@ export default function ContractorsScreen() {
                 style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", borderRadius: 16, paddingVertical: 16, alignItems: "center" }}>
                 <Text style={{ color: "rgba(255,255,255,0.6)", fontWeight: "700" }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleCreate} disabled={!name.trim() || createContractor.isPending} activeOpacity={0.85} style={{ flex: 1 }}>
+              <TouchableOpacity onPress={handleSave} disabled={!name.trim() || isSaving} activeOpacity={0.85} style={{ flex: 1 }}>
                 <LinearGradient colors={["#F59E0B", "#D97706"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={{ borderRadius: 16, paddingVertical: 16, alignItems: "center" }}>
-                  {createContractor.isPending ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "700" }}>Save →</Text>}
+                  {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "700" }}>{editingContractor ? "Update →" : "Save →"}</Text>}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
