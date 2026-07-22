@@ -277,21 +277,37 @@ export default function CaptureScreen() {
     }
   }
 
-  async function handlePicker() {
-    if (Platform.OS === "web") {
-      // On web, use a native file input for better mobile/camera support
+  /** Read a File object as a base64 data URL (web only). */
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /** Open a file input on web and resolve with selected File objects. */
+  function openWebFilePicker({ multiple = false, capture = false } = {}) {
+    return new Promise((resolve) => {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "image/*";
-      input.multiple = true;
-      input.onchange = async (e) => {
-        const files = Array.from(e.target.files ?? []);
-        for (const file of files) {
-          const uri = URL.createObjectURL(file);
-          await processAsset({ uri, fileName: file.name, mimeType: file.type });
-        }
-      };
+      if (multiple) input.multiple = true;
+      if (capture) input.capture = "environment";
+      input.onchange = (e) => resolve(Array.from(e.target.files ?? []));
+      input.oncancel = () => resolve([]);
       input.click();
+    });
+  }
+
+  async function handlePicker() {
+    if (Platform.OS === "web") {
+      const files = await openWebFilePicker({ multiple: true });
+      for (const file of files) {
+        const uri = await readFileAsDataURL(file);
+        await processAsset({ uri, fileName: file.name, mimeType: file.type });
+      }
       return;
     }
     setIsCapturing(true);
@@ -310,19 +326,11 @@ export default function CaptureScreen() {
   }
 
   async function handleWebCamera() {
-    // On web/mobile Chrome, trigger camera directly via capture attribute
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment"; // rear camera
-    input.onchange = async (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const uri = URL.createObjectURL(file);
-        await processAsset({ uri, fileName: file.name, mimeType: file.type });
-      }
-    };
-    input.click();
+    const files = await openWebFilePicker({ capture: true });
+    if (files[0]) {
+      const uri = await readFileAsDataURL(files[0]);
+      await processAsset({ uri, fileName: files[0].name, mimeType: files[0].type });
+    }
   }
 
   function handleRetake(photoId) {
