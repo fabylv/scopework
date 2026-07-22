@@ -346,7 +346,7 @@ export default function CaptureScreen() {
       {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#12161F"]}
         style={{ paddingTop: 56, paddingHorizontal: 20, paddingBottom: 20 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 12 }}>
+        <TouchableOpacity onPress={() => router.replace(`/project/${projectId}`)} style={{ marginBottom: 12 }}>
           <Text style={{ color: "#F59E0B", fontSize: 14, fontWeight: "600" }}>← Back to Report</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>

@@ -100,7 +100,7 @@ export default function ProjectDetailScreen() {
       {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
         style={{ paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
-        <TouchableOpacity onPress={() => router.back()} className="mb-4">
+        <TouchableOpacity onPress={() => router.replace("/(tabs)/dashboard")} className="mb-4">
           <Text style={{ color: "#F59E0B", fontSize: 14, fontWeight: "600" }}>← Back</Text>
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold" numberOfLines={1}>{project.name}</Text>
