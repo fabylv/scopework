@@ -155,11 +155,38 @@ export default function CaptureScreen() {
 
   async function handleCamera() {
     if (Platform.OS === "web") {
-      // On mobile web, launchImageLibraryAsync opens Android's native picker
-      // which includes a "Camera" option in the bottom sheet
-      await pickAndProcess(() =>
-        ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 })
-      );
+      // input.click() must happen synchronously (before any await) to keep
+      // the user-gesture context on mobile Chrome
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.capture = "environment"; // opens rear camera directly on Android
+      input.style.cssText = "position:fixed;top:-999px;left:-999px;opacity:0;";
+      document.body.appendChild(input);
+
+      const filePromise = new Promise((resolve) => {
+        input.onchange = (e) => {
+          document.body.removeChild(input);
+          resolve(e.target.files?.[0] ?? null);
+        };
+      });
+
+      input.click(); // synchronous — still in gesture context
+
+      try {
+        const file = await filePromise;
+        if (file) {
+          const uri = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          await processAsset({ uri, fileName: file.name, mimeType: file.type });
+        }
+      } catch (e) {
+        Alert.alert("Error", e?.message ?? "Could not open camera.");
+      }
       return;
     }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
