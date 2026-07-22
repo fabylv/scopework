@@ -36,26 +36,14 @@ export default function AccountScreen() {
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
   const [pwResetSent, setPwResetSent] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+
 
   useEffect(() => {
     if (isMockMode()) return; // no real user in mock mode
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
 
-  // Sign-out via effect so navigation fires outside of Alert callback
-  useEffect(() => {
-    if (!signingOut) return;
-    supabase.auth.signOut().finally(() => {
-      if (Platform.OS === "web") {
-        // Clear all stored auth data then hard redirect
-        try { localStorage.clear(); } catch (_) {}
-        window.location.replace(window.location.origin);
-      } else {
-        router.replace("/(auth)/login");
-      }
-    });
-  }, [signingOut]);
+
 
   function handleChangeEmail() {
     setNewEmail(email ?? "");
@@ -98,9 +86,21 @@ export default function AccountScreen() {
   }
 
   function handleSignOut() {
+    if (Platform.OS === "web") {
+      if (!window.confirm("Sign out? You'll need to sign in again to access your projects.")) return;
+      supabase.auth.signOut().finally(() => {
+        try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+        window.location.replace(window.location.origin);
+      });
+      return;
+    }
     Alert.alert("Sign Out", "You'll need to sign in again to access your projects.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: () => setSigningOut(true) },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: () => supabase.auth.signOut().finally(() => router.replace("/(auth)/login")),
+      },
     ]);
   }
 
