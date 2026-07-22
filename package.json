@@ -1,34 +1,37 @@
 {
-  "name": "scopework",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
+  "name": "repairiq",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.14",
-    "@ai-sdk/google": "^4.0.14",
-    "@ai-sdk/openai": "^4.0.13",
-    "@supabase/ssr": "^0.12.1",
-    "@supabase/supabase-js": "^2.110.3",
-    "ai": "^7.0.26",
-    "geist": "^1.7.2",
-    "next": "16.2.10",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@supabase/supabase-js": "^2.110.8",
+    "@tanstack/react-query": "^5.101.4",
+    "babel-preset-expo": "^57.0.3",
+    "expo": "~57.0.7",
+    "expo-camera": "~57.0.3",
+    "expo-constants": "~57.0.6",
+    "expo-file-system": "~57.0.1",
+    "expo-image-picker": "~57.0.5",
+    "expo-linking": "~57.0.3",
+    "expo-router": "~57.0.7",
+    "expo-secure-store": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "nativewind": "^4.2.6",
+    "prop-types": "^15.8.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-web": "^0.21.2",
+    "react-native-worklets": "0.10.0",
+    "tailwindcss": "^3.4.19"
   },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.10",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
 }
