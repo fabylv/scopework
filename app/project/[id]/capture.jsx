@@ -35,7 +35,7 @@ const SEV_BG    = { high: "rgba(239,68,68,0.12)", medium: "rgba(245,158,11,0.12)
 const CAT_ICON  = { Roofing:"🏠", Plumbing:"🔧", Electrical:"⚡", HVAC:"❄️", Structural:"🏗️", Flooring:"🪵", Painting:"🎨", Other:"📋" };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-function PhotoCard({ photo, onRetake }) {
+function PhotoCard({ photo, onRetake, onDelete }) {
   const { status, uri, result } = photo;
   const analyzing = status === "analyzing";
   const isPoor    = result?.quality === "poor";
@@ -46,6 +46,16 @@ function PhotoCard({ photo, onRetake }) {
     <View className="bg-white rounded-2xl overflow-hidden mb-3" style={shadows.dark}>
       <View style={{ position: "relative" }}>
         <Image source={{ uri }} style={{ width: "100%", height: 180 }} resizeMode="cover" />
+
+        {/* Delete button — top-left corner, hidden while analyzing */}
+        {!analyzing && (
+          <TouchableOpacity
+            onPress={() => onDelete(photo.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={{ position:"absolute", top:8, left:8, zIndex:10, width:28, height:28, borderRadius:14, backgroundColor:"rgba(0,0,0,0.55)", alignItems:"center", justifyContent:"center" }}>
+            <Text style={{ color:"#fff", fontSize:14, fontWeight:"700", lineHeight:16 }}>✕</Text>
+          </TouchableOpacity>
+        )}
 
         {analyzing && (
           <View style={{ position:"absolute", inset:0, backgroundColor:"rgba(26,31,46,0.7)", alignItems:"center", justifyContent:"center", gap:8 }}>
@@ -221,8 +231,14 @@ export default function CaptureScreen() {
     }
   }
 
+  function handleDelete(photoId) {
+    setPhotos((p) => p.filter((x) => x.id !== photoId));
+    setAllIssues((prev) => prev.filter((i) => i.photoId !== photoId));
+  }
+
   function handleRetake(photoId) {
     setPhotos((p) => p.filter((x) => x.id !== photoId));
+    setAllIssues((prev) => prev.filter((i) => i.photoId !== photoId));
     handleCamera();
   }
 
@@ -284,7 +300,7 @@ export default function CaptureScreen() {
             </View>
           ) : (
             photos.map((photo) => (
-              <PhotoCard key={photo.id} photo={photo} onRetake={handleRetake} />
+              <PhotoCard key={photo.id} photo={photo} onRetake={handleRetake} onDelete={handleDelete} />
             ))
           )}
         </View>
