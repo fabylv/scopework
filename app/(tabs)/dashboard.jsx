@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ProjectCard from "../../components/ProjectCard";
 
 function toTitleCase(str) {
@@ -51,6 +52,7 @@ function StatsBar({ projects = [] }) {
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { data: projects = [], isLoading, isError, refetch } = useProjects();
   const createProject = useCreateProject();
 
@@ -78,7 +80,7 @@ export default function DashboardScreen() {
   return (
     <View className="flex-1 bg-brand-bg">
       {/* Dark gradient header */}
-      <LinearGradient colors={["#1A1F2E", "#252C3D"]} style={{ paddingTop: 56, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: "hidden" }}>
+      <LinearGradient colors={["#1A1F2E", "#252C3D"]} style={{ paddingTop: insets.top + 12, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: "hidden" }}>
         <View className="px-5 pb-4 flex-row items-center justify-between">
           <View>
             <Text className="text-white/50 text-sm">Good work,</Text>

@@ -25,6 +25,7 @@ function confirmDelete(name, onConfirm) {
   ]);
 }
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useContractors,
   useCreateContractor,
@@ -195,6 +196,7 @@ function SectionHeader({ title, display, kind }) {
 }
 
 export default function ContractorsScreen() {
+  const insets = useSafeAreaInsets();
   const { data: contractors = [], isLoading } = useContractors();
   const createContractor = useCreateContractor();
   const updateContractor = useUpdateContractor();
@@ -255,7 +257,7 @@ export default function ContractorsScreen() {
     <View className="flex-1 bg-brand-bg">
       {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
-        style={{ paddingTop: 56, paddingBottom: 24, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        style={{ paddingTop: insets.top + 12, paddingBottom: 24, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
         <Text className="text-white text-2xl font-bold">Contractors</Text>
         <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginTop: 3 }}>
           {totalCount} contact{totalCount !== 1 ? "s" : ""} · {sections.length} group{sections.length !== 1 ? "s" : ""}

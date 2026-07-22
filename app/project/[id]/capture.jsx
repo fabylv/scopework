@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
 import { shadows } from "../../../lib/shadow";
 
@@ -146,6 +147,7 @@ function EstimateBar({ issues }) {
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function CaptureScreen() {
+  const insets = useSafeAreaInsets();
   const { id: projectId } = useLocalSearchParams();
   const router = useRouter();
 
@@ -248,7 +250,7 @@ export default function CaptureScreen() {
   return (
     <View style={{ flex:1, backgroundColor:"#12161F" }}>
       {/* Header */}
-      <LinearGradient colors={["#1A1F2E","#12161F"]} style={{ paddingTop:56, paddingHorizontal:20, paddingBottom:20 }}>
+      <LinearGradient colors={["#1A1F2E","#12161F"]} style={{ paddingTop: insets.top + 12, paddingHorizontal:20, paddingBottom:20 }}>
         <TouchableOpacity onPress={() => router.replace(`/project/${projectId}`)} style={{ marginBottom:12 }}>
           <Text style={{ color:"#F59E0B", fontSize:14, fontWeight:"600" }}>← Back to Report</Text>
         </TouchableOpacity>

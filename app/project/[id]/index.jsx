@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
 import IssueRow from "../../../components/IssueRow";
 import { useProject } from "../../../hooks/useProjects";
@@ -66,6 +67,7 @@ function CostSummary({ issues = [] }) {
 }
 
 export default function ProjectDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { data: project, isLoading, refetch } = useProject(id);
@@ -100,7 +102,7 @@ export default function ProjectDetailScreen() {
     <View className="flex-1 bg-brand-bg">
       {/* Header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
-        style={{ paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        style={{ paddingTop: insets.top + 12, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
         <TouchableOpacity onPress={() => router.replace("/(tabs)/dashboard")} className="mb-4">
           <Text style={{ color: "#F59E0B", fontSize: 14, fontWeight: "600" }}>← Back</Text>
         </TouchableOpacity>

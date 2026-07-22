@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isMockMode } from "../../lib/mockData";
 import { shadows } from "../../lib/shadow";
 import { supabase } from "../../lib/supabase";
@@ -30,6 +31,7 @@ function Row({ icon, label, sublabel, onPress, danger }) {
 }
 
 export default function AccountScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [email, setEmail] = useState(null);
   const [editingEmail, setEditingEmail] = useState(false);
@@ -108,7 +110,7 @@ export default function AccountScreen() {
     <View className="flex-1 bg-brand-bg">
       {/* Dark header */}
       <LinearGradient colors={["#1A1F2E", "#252C3D"]}
-        style={{ paddingTop: 56, paddingBottom: 28, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        style={{ paddingTop: insets.top + 12, paddingBottom: 28, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
         <View className="flex-row items-center gap-4">
           <LinearGradient colors={["#F59E0B", "#D97706"]}
             style={{ width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center" }}>
