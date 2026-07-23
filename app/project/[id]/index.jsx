@@ -2,9 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Alert,
-  Image,
-  ScrollView,
   SectionList,
   Text,
   TouchableOpacity,
@@ -15,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
 import HeaderLogo from "../../../components/HeaderLogo";
 import IssueRow from "../../../components/IssueRow";
-import { useDeletePhoto, usePhotos } from "../../../hooks/usePhotos";
+import { usePhotos } from "../../../hooks/usePhotos";
 import { useProject } from "../../../hooks/useProjects";
 import { updateIssue } from "../../../lib/api/issues";
 
@@ -75,8 +72,7 @@ export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { data: project, isLoading, refetch } = useProject(id);
-  const { data: photos = [], refetch: refetchPhotos } = usePhotos(id);
-  const deletePhoto = useDeletePhoto(id);
+  const { data: photos = [] } = usePhotos(id);
 
   if (isLoading) {
     return (
@@ -154,36 +150,6 @@ export default function ProjectDetailScreen() {
           <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>📸  Add / Capture Photos</Text>
         </LinearGradient>
       </TouchableOpacity>
-
-      {/* Photo strip */}
-      {photos.length > 0 && (
-        <View style={{ marginTop: 16 }}>
-          <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, marginLeft: 20, marginBottom: 10 }}>
-            Photos · {photos.length}
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
-            {photos.map((photo) => (
-              <TouchableOpacity
-                key={photo.id}
-                onLongPress={() =>
-                  Alert.alert("Delete Photo", "Remove this photo from the project?", [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Delete", style: "destructive", onPress: () => deletePhoto(photo) },
-                  ])
-                }
-                activeOpacity={0.85}
-                style={{ width: 100, height: 100, borderRadius: 14, overflow: "hidden", backgroundColor: "#1A1F2E" }}
-              >
-                <Image
-                  source={{ uri: photo.public_url }}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
 
       {/* Issues */}
       {sections.length === 0 ? (
