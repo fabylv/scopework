@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
 import HeaderLogo from "../../../components/HeaderLogo";
 import { createIssues } from "../../../lib/api/issues";
-import { uploadPhoto } from "../../../lib/api/photos";
+import { deletePhoto, uploadPhoto } from "../../../lib/api/photos";
 import { shadows } from "../../../lib/shadow";
 
 // ─── Mock AI results (cycles on each photo) ──────────────────────────────────
@@ -231,21 +231,29 @@ export default function CaptureScreen() {
       const result = nextMock();
 
       // 2. Upload photo to Supabase Storage + save record
+      let uploadedPhotoId = null;
       try {
-        await uploadPhoto(projectId, {
+        const uploaded = await uploadPhoto(projectId, {
           uri: asset.uri,
           mimeType: asset.mimeType ?? "image/jpeg",
           fileName: asset.fileName ?? `${localId}.jpg`,
         });
+        if (uploaded?.id) {
+          uploadedPhotoId = uploaded.id;
+          setPhotos((p) => p.map((x) =>
+            x.id === localId ? { ...x, dbId: uploaded.id, storagePath: uploaded.storage_path } : x
+          ));
+        }
       } catch (uploadErr) {
         console.warn("Photo upload failed:", uploadErr.message);
       }
 
-      // 3. Save detected issues to DB
+      // 3. Save detected issues to DB (linked to the photo)
       if (result.quality === "good" && result.issues?.length) {
         try {
           await createIssues(result.issues.map((issue) => ({
             project_id: projectId,
+            photo_id: uploadedPhotoId,
             description: issue.description,
             category: issue.category,
             severity: issue.severity,
@@ -268,7 +276,15 @@ export default function CaptureScreen() {
     }
   }
 
-  function handleDelete(photoId) {
+  async function handleDelete(photoId) {
+    const photo = photos.find((x) => x.id === photoId);
+    if (photo?.dbId) {
+      try {
+        await deletePhoto({ id: photo.dbId, storage_path: photo.storagePath });
+      } catch (e) {
+        console.warn("Storage delete failed:", e.message);
+      }
+    }
     setPhotos((p) => p.filter((x) => x.id !== photoId));
     setAllIssues((prev) => prev.filter((i) => i.photoId !== photoId));
   }

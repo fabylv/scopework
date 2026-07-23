@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Text, TextInput, View } from "react-native";
 
 const SEVERITY_COLOR = {
   high: "bg-red-100 text-red-700",
@@ -12,11 +12,24 @@ const SEVERITY_COLOR = {
  *
  * @param {{ issue: object, onUpdate: function }} props
  */
-export default function IssueRow({ issue, onUpdate }) {
+export default function IssueRow({ issue, photo, onUpdate }) {
   const severityClass = SEVERITY_COLOR[issue.severity] ?? "bg-gray-100 text-gray-600";
 
   return (
     <View className="flex-row items-start py-3 border-b border-brand-border gap-3">
+      {/* Photo thumbnail */}
+      {photo?.public_url ? (
+        <Image
+          source={{ uri: photo.public_url }}
+          style={{ width: 56, height: 56, borderRadius: 10 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: "#F1F5F9", alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 22 }}>📷</Text>
+        </View>
+      )}
+
       {/* Left: description + severity badge */}
       <View className="flex-1">
         <Text className="text-sm font-medium text-brand-dark">{issue.description}</Text>
@@ -56,6 +69,11 @@ IssueRow.propTypes = {
     severity: PropTypes.oneOf(["high", "medium", "low"]),
     estimated_cost: PropTypes.number,
     category: PropTypes.string,
+    photo_id: PropTypes.string,
   }).isRequired,
+  photo: PropTypes.shape({
+    id: PropTypes.string,
+    public_url: PropTypes.string,
+  }),
   onUpdate: PropTypes.func.isRequired,
 };

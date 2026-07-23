@@ -2,9 +2,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
   SectionList,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -13,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomNav from "../../../components/BottomNav";
 import HeaderLogo from "../../../components/HeaderLogo";
 import IssueRow from "../../../components/IssueRow";
+import { useDeletePhoto, usePhotos } from "../../../hooks/usePhotos";
 import { useProject } from "../../../hooks/useProjects";
 import { updateIssue } from "../../../lib/api/issues";
 
@@ -72,6 +75,8 @@ export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { data: project, isLoading, refetch } = useProject(id);
+  const { data: photos = [], refetch: refetchPhotos } = usePhotos(id);
+  const deletePhoto = useDeletePhoto(id);
 
   if (isLoading) {
     return (
@@ -93,6 +98,23 @@ export default function ProjectDetailScreen() {
   }
 
   const sections = groupByCategory(project.issues);
+  // Map photo id → photo for exact linking via photo_id
+  const photosById = Object.fromEntries(photos.map((p) => [p.id, p]));
+  // Fallback: sort photos oldest-first so we can pair them to issue batches by time
+  const photosSorted = [...photos].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  function photoForIssue(issue) {
+    // 1. Exact link via photo_id (works once SQL column exists + new photos captured)
+    if (issue.photo_id && photosById[issue.photo_id]) return photosById[issue.photo_id];
+    // 2. Fallback: nearest photo captured at or before this issue was created
+    const issueTime = new Date(issue.created_at).getTime();
+    let best = null;
+    for (const p of photosSorted) {
+      if (new Date(p.created_at).getTime() <= issueTime + 30000) best = p;
+      else break;
+    }
+    return best ?? photosSorted[0] ?? null;
+  }
 
   async function handleUpdateIssue(issueId, updates) {
     await updateIssue(issueId, updates);
@@ -133,6 +155,36 @@ export default function ProjectDetailScreen() {
         </LinearGradient>
       </TouchableOpacity>
 
+      {/* Photo strip */}
+      {photos.length > 0 && (
+        <View style={{ marginTop: 16 }}>
+          <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, marginLeft: 20, marginBottom: 10 }}>
+            Photos · {photos.length}
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+            {photos.map((photo) => (
+              <TouchableOpacity
+                key={photo.id}
+                onLongPress={() =>
+                  Alert.alert("Delete Photo", "Remove this photo from the project?", [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: () => deletePhoto(photo) },
+                  ])
+                }
+                activeOpacity={0.85}
+                style={{ width: 100, height: 100, borderRadius: 14, overflow: "hidden", backgroundColor: "#1A1F2E" }}
+              >
+                <Image
+                  source={{ uri: photo.public_url }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Issues */}
       {sections.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-3 pb-20">
@@ -158,7 +210,7 @@ export default function ProjectDetailScreen() {
             </View>
           )}
           renderItem={({ item }) => (
-            <IssueRow issue={item} onUpdate={handleUpdateIssue} />
+            <IssueRow issue={item} photo={photoForIssue(item)} onUpdate={handleUpdateIssue} />
           )}
           stickySectionHeadersEnabled
           showsVerticalScrollIndicator={false}
