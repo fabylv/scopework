@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -154,6 +155,7 @@ export default function CaptureScreen() {
   const { id: projectId } = useLocalSearchParams();
   const router = useRouter();
 
+  const queryClient = useQueryClient();
   const [photos, setPhotos]   = useState([]);
   const [allIssues, setAllIssues] = useState([]);
 
@@ -265,6 +267,11 @@ export default function CaptureScreen() {
         }
       }
 
+      // 4. Invalidate caches so dashboard + project detail update automatically
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["photos", projectId] });
+
       // 4. Update local UI state
       setPhotos((p) => p.map((x) => x.id === localId ? { ...x, status: "done", result } : x));
       if (result.quality === "good" && result.issues?.length) {
@@ -281,6 +288,9 @@ export default function CaptureScreen() {
     if (photo?.dbId) {
       try {
         await deletePhoto({ id: photo.dbId, storage_path: photo.storagePath });
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
+        queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+        queryClient.invalidateQueries({ queryKey: ["photos", projectId] });
       } catch (e) {
         console.warn("Storage delete failed:", e.message);
       }
