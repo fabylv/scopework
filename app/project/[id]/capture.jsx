@@ -248,6 +248,7 @@ export default function CaptureScreen() {
         }
       } catch (uploadErr) {
         console.warn("Photo upload failed:", uploadErr.message);
+        Alert.alert("Upload Error", uploadErr.message ?? "Photo could not be saved. Check your Supabase storage bucket.");
       }
 
       // 3. Save detected issues to DB (linked to the photo)
